@@ -6,7 +6,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use App\Models\User;
-use App\Models\Farmer;
+use App\Models\Zone;
 
 class AuthController extends Controller
 {
@@ -24,10 +24,19 @@ class AuthController extends Controller
 
         if (Auth::attempt($credentials)) {
             $request->session()->regenerate();
-            $role = Auth::user()->role;
-            if ($role === 'admin') return redirect()->route('admin.dashboard');
-            if ($role === 'officer') return redirect()->route('officer.dashboard');
-            return redirect()->route('farmer.dashboard');
+            $user = Auth::user();
+
+            if (!$user->is_active) {
+                Auth::logout();
+                return back()->withErrors(['email' => 'Your account has been deactivated.']);
+            }
+
+            return match ($user->role) {
+                'admin' => redirect()->route('admin.dashboard'),
+                'sdo' => redirect()->route('officer.dashboard'),
+                'lineman' => redirect()->route('lineman.dashboard'),
+                default => redirect()->route('farmer.dashboard'),
+            };
         }
 
         return back()->withErrors(['email' => 'The provided credentials do not match our records.']);
@@ -35,7 +44,8 @@ class AuthController extends Controller
 
     public function showRegister()
     {
-        return view('auth.register');
+        $zones = Zone::all();
+        return view('auth.register', compact('zones'));
     }
 
     public function register(Request $request)
@@ -44,25 +54,39 @@ class AuthController extends Controller
             'name' => 'required|string|max:255',
             'email' => 'required|email|unique:users',
             'password' => 'required|min:6|confirmed',
-            'aadhaar_number' => 'required|string|unique:farmers',
-            'land_area' => 'required|numeric',
-            'land_address' => 'required|string',
-            'phone_number' => 'required|string',
+            'phone' => 'required|string|max:15',
+            'aadhar_number' => 'required|string|max:12',
+            'village' => 'required|string',
+            'district' => 'required|string',
+            'address' => 'required|string',
         ]);
+
+        $year = date('Y');
+        $lastFarmer = User::where('role', 'farmer')
+            ->where('farmer_id_number', 'like', "KV-{$year}-%")
+            ->orderByDesc('id')->first();
+
+        if ($lastFarmer && preg_match('/KV-\d{4}-(\d+)/', $lastFarmer->farmer_id_number, $m)) {
+            $nextNum = intval($m[1]) + 1;
+        } else {
+            $nextNum = 1001;
+        }
+        $farmerId = "KV-{$year}-{$nextNum}";
+        $zone = Zone::where('district', $request->district)->first();
 
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
             'password' => Hash::make($request->password),
             'role' => 'farmer',
-        ]);
-
-        Farmer::create([
-            'user_id' => $user->id,
-            'aadhaar_number' => $request->aadhaar_number,
-            'land_area' => $request->land_area,
-            'land_address' => $request->land_address,
-            'phone_number' => $request->phone_number,
+            'phone' => $request->phone,
+            'farmer_id_number' => $farmerId,
+            'village' => $request->village,
+            'district' => $request->district,
+            'address' => $request->address,
+            'state' => 'Punjab',
+            'aadhar_number' => $request->aadhar_number,
+            'zone_id' => $zone?->id,
         ]);
 
         Auth::login($user);

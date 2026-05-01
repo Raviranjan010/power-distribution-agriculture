@@ -53,7 +53,7 @@ class ConnectionSeeder extends Seeder
                 $netPayable = $energyCharges + $fixedCharges;
 
                 Bill::create([
-                    'bill_number' => 'BILL-' . $readingDate->format('Ym') . '-C' . $connection->id . '-' . $reading->id,
+                    'bill_number' => 'BILL-' . $readingDate->format('Ym') . '-C' . $connection->id . '-' . ($i),
                     'connection_id' => $connection->id,
                     'meter_reading_id' => $reading->id,
                     'billing_month' => $readingDate->month,
