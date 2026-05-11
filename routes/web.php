@@ -11,6 +11,23 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
+Route::get('/health', function () {
+    $results = [];
+    try {
+        \Illuminate\Support\Facades\DB::connection()->getPdo();
+        $results['database'] = 'Connected';
+    } catch (\Exception $e) {
+        $results['database'] = 'Error: ' . $e->getMessage();
+    }
+    
+    $results['storage'] = is_writable(storage_path()) ? 'Writable' : 'Not Writable';
+    $results['session_driver'] = config('session.driver');
+    $results['app_env'] = config('app.env');
+    $results['app_debug'] = config('app.debug');
+    
+    return response()->json($results);
+});
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');

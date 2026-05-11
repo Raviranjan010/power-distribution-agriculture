@@ -26,27 +26,45 @@ chmod -R 775 storage bootstrap/cache
 # 3. Handle Laravel setup tasks
 echo "==> Running Laravel setup tasks..."
 
-# Force critical env vars for Render stability
+# Force critical env vars for Render stability at runtime
 export APP_DEBUG=true
 export SESSION_DRIVER=cookie
 export SESSION_SECURE_COOKIE=true
+export LOG_CHANNEL=stderr
 
-# Wait for DB
-sleep 2
+# Wait for DB to be responsive
+echo "==> Checking database connection..."
+MAX_DB_RETRIES=5
+DB_COUNT=0
+while ! php artisan db:show >/dev/null 2>&1; do
+    echo "    Waiting for DB... ($DB_COUNT/$MAX_DB_RETRIES)"
+    sleep 3
+    DB_COUNT=$((DB_COUNT + 1))
+    if [ $DB_COUNT -ge $MAX_DB_RETRIES ]; then
+        echo "==> WARNING: Database connection check failed. Attempting migrations anyway..."
+        break
+    fi
+done
 
 # Run migrations
 echo "==> Running database migrations..."
 php artisan migrate --force 2>&1
 
-# Run seeders
-echo "==> Running database seeders..."
-php artisan db:seed --force 2>&1 || echo "==> Seeders finished."
+# Run seeders only if users table is empty
+echo "==> Checking if seeding is needed..."
+USER_COUNT=$(php artisan tinker --execute="echo \App\Models\User::count();" 2>/dev/null)
+if [[ "$USER_COUNT" == "0" ]]; then
+    echo "==> Seeding database..."
+    php artisan db:seed --force 2>&1
+else
+    echo "==> Database already has $USER_COUNT users, skipping seeder."
+fi
 
-# Cache config
-echo "==> Caching..."
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+# We SKIP config:cache to allow environment variables to be read dynamically
+echo "==> Clearing caches..."
+php artisan config:clear
+php artisan route:clear
+php artisan view:clear
 
 # Create storage link
 php artisan storage:link --force 2>/dev/null || true
