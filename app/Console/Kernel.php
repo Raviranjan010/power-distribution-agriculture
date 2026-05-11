@@ -12,7 +12,12 @@ class Kernel extends ConsoleKernel
      */
     protected function schedule(Schedule $schedule): void
     {
-        // $schedule->command('inspire')->hourly();
+        // Mark overdue bills daily at midnight
+        $schedule->call(function () {
+            \App\Models\Bill::where('status', 'pending')
+                ->where('due_date', '<', now()->startOfDay())
+                ->update(['status' => 'overdue']);
+        })->daily()->description('Mark overdue bills');
     }
 
     /**

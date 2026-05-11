@@ -12,12 +12,14 @@ class LinemanController extends Controller
 {
     public function dashboard()
     {
-        $complaints = Complaint::where('assigned_to', Auth::id())->get();
+        $complaints = Complaint::where('assigned_to', Auth::id())->with(['consumer', 'connection'])->get();
         $readings = MeterReading::where('lineman_id', Auth::id())
             ->whereMonth('reading_date', now()->month)
+            ->with('connection.consumer')
             ->get();
         $connections = Connection::whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
             ->where('status', 'active')
+            ->with('consumer')
             ->get();
 
         return view('lineman.dashboard', compact('complaints', 'readings', 'connections'));

@@ -122,6 +122,17 @@
                     </div>
                     <button type="submit" class="bg-amber-600 hover:bg-amber-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">Assign</button>
                 </form>
+            @elseif(in_array($complaint->status, ['assigned', 'in_review']))
+                <form method="POST" action="{{ route('officer.complaint.resolve', $complaint->id) }}" class="mt-3 pt-3 border-t border-theme-border/50">
+                    @csrf
+                    <div class="mb-3">
+                        <label class="block text-[10px] text-theme-text font-bold uppercase mb-1">Resolution Remarks</label>
+                        <textarea name="resolution_remarks" rows="2" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-3 py-2 text-white text-sm" placeholder="Describe the resolution..." required></textarea>
+                    </div>
+                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">
+                        <i class="fa-solid fa-check mr-1"></i> Mark Resolved
+                    </button>
+                </form>
             @endif
         </div>
     @empty

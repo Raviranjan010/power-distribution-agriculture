@@ -17,6 +17,11 @@ Route::get('/register', [AuthController::class, 'showRegister'])->name('register
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
 
+Route::get('/forgot-password', [AuthController::class, 'showForgotPassword'])->name('password.request');
+Route::post('/forgot-password', [AuthController::class, 'sendResetLink'])->name('password.email');
+Route::get('/reset-password/{token}', [AuthController::class, 'showResetPassword'])->name('password.reset');
+Route::post('/reset-password', [AuthController::class, 'resetPassword'])->name('password.update');
+
 Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->group(function () {
     Route::get('/dashboard', [AdminController::class, 'dashboard'])->name('dashboard');
     Route::get('/users', [AdminController::class, 'users'])->name('users');
@@ -24,8 +29,12 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/users/{id}/toggle', [AdminController::class, 'toggleUserStatus'])->name('users.toggle');
     Route::get('/tariffs', [AdminController::class, 'tariffs'])->name('tariffs');
     Route::post('/tariffs', [AdminController::class, 'storeTariff'])->name('tariffs.store');
+    Route::patch('/tariffs/{id}', [AdminController::class, 'updateTariff'])->name('tariffs.update');
+    Route::delete('/tariffs/{id}', [AdminController::class, 'deleteTariff'])->name('tariffs.delete');
     Route::get('/subsidies', [AdminController::class, 'subsidySchemes'])->name('subsidies');
     Route::post('/subsidies', [AdminController::class, 'storeSubsidyScheme'])->name('subsidies.store');
+    Route::patch('/subsidies/{id}', [AdminController::class, 'updateSubsidyScheme'])->name('subsidies.update');
+    Route::delete('/subsidies/{id}', [AdminController::class, 'deleteSubsidyScheme'])->name('subsidies.delete');
     Route::get('/audit-logs', [AdminController::class, 'auditLogs'])->name('audit_logs');
     Route::get('/export', [AdminController::class, 'exportReport'])->name('export');
 });

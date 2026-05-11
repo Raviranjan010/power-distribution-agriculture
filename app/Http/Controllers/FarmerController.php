@@ -76,16 +76,20 @@ class FarmerController extends Controller
             'sanctioned_load_kw' => 'required|numeric|min:1|max:50',
         ]);
         $user = Auth::user();
-        $lastConn = Connection::orderByDesc('id')->first();
-        $nextNum = $lastConn ? $lastConn->id + 1 : 1;
-        $connectionNumber = 'KV-CN-' . str_pad($nextNum, 3, '0', STR_PAD_LEFT);
 
-        Connection::create([
-            'connection_number' => $connectionNumber, 'consumer_id' => $user->id,
-            'connection_type' => $request->connection_type, 'field_name' => $request->field_name,
-            'sanctioned_load_kw' => $request->sanctioned_load_kw, 'status' => 'pending',
-        ]);
-        return back()->with('success', 'Connection request submitted! #' . $connectionNumber);
+        $connection = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $user) {
+            $lastConn = Connection::lockForUpdate()->orderByDesc('id')->first();
+            $nextNum = $lastConn ? $lastConn->id + 1 : 1;
+            $connectionNumber = 'KV-CN-' . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
+
+            return Connection::create([
+                'connection_number' => $connectionNumber, 'consumer_id' => $user->id,
+                'connection_type' => $request->connection_type, 'field_name' => $request->field_name,
+                'sanctioned_load_kw' => $request->sanctioned_load_kw, 'status' => 'pending',
+            ]);
+        });
+
+        return back()->with('success', 'Connection request submitted! #' . $connection->connection_number);
     }
 
     public function storeComplaint(Request $request)
@@ -141,13 +145,17 @@ class FarmerController extends Controller
 
         $razorpayOrderId = null;
         if (env('RAZORPAY_KEY') && env('RAZORPAY_SECRET') && class_exists('\Razorpay\Api\Api')) {
-            $api = new \Razorpay\Api\Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
-            $order = $api->order->create([
-                'receipt' => (string)$bill->id,
-                'amount' => $bill->net_payable * 100,
-                'currency' => 'INR'
-            ]);
-            $razorpayOrderId = $order['id'];
+            try {
+                $api = new \Razorpay\Api\Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+                $order = $api->order->create([
+                    'receipt' => (string)$bill->id,
+                    'amount' => $bill->net_payable * 100,
+                    'currency' => 'INR'
+                ]);
+                $razorpayOrderId = $order['id'];
+            } catch (\Exception $e) {
+                $razorpayOrderId = null;
+            }
         }
 
         return view('farmer.pay_confirm', compact('bill', 'conn', 'razorpayOrderId'));

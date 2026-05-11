@@ -143,6 +143,34 @@ class AdminController extends Controller
         return back()->with('success', 'Tariff created.');
     }
 
+    public function updateTariff(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string', 'rate_per_unit' => 'required|numeric|min:0',
+            'fixed_charge_per_kw' => 'required|numeric|min:0',
+            'applicable_to' => 'required|in:agricultural,domestic,commercial', 'effective_from' => 'required|date',
+        ]);
+        $tariff = TariffCategory::findOrFail($id);
+        $oldValues = $tariff->toArray();
+        $tariff->update($request->only(['name', 'rate_per_unit', 'fixed_charge_per_kw', 'applicable_to', 'effective_from']));
+        AuditLog::create([
+            'user_id' => Auth::id(), 'action' => 'updated_tariff', 'model_type' => 'TariffCategory',
+            'model_id' => $id, 'old_values' => $oldValues, 'new_values' => $request->all(), 'ip_address' => request()->ip(),
+        ]);
+        return back()->with('success', 'Tariff updated.');
+    }
+
+    public function deleteTariff($id)
+    {
+        $tariff = TariffCategory::findOrFail($id);
+        $tariff->update(['is_active' => false]);
+        AuditLog::create([
+            'user_id' => Auth::id(), 'action' => 'deactivated_tariff', 'model_type' => 'TariffCategory',
+            'model_id' => $id, 'ip_address' => request()->ip(),
+        ]);
+        return back()->with('success', 'Tariff deactivated.');
+    }
+
     public function subsidySchemes()
     {
         $schemes = SubsidyScheme::orderByDesc('created_at')->get();
@@ -161,6 +189,28 @@ class AdminController extends Controller
             'scheme_name', 'description', 'discount_percentage', 'max_units_covered', 'start_date', 'end_date'
         ]));
         return back()->with('success', 'Scheme created.');
+    }
+
+    public function updateSubsidyScheme(Request $request, $id)
+    {
+        $request->validate([
+            'scheme_name' => 'required|string', 'description' => 'required|string',
+            'discount_percentage' => 'required|numeric|min:0|max:100',
+            'max_units_covered' => 'required|numeric|min:0',
+            'start_date' => 'required|date', 'end_date' => 'required|date|after:start_date',
+        ]);
+        $scheme = SubsidyScheme::findOrFail($id);
+        $scheme->update($request->only([
+            'scheme_name', 'description', 'discount_percentage', 'max_units_covered', 'start_date', 'end_date'
+        ]));
+        return back()->with('success', 'Scheme updated.');
+    }
+
+    public function deleteSubsidyScheme($id)
+    {
+        $scheme = SubsidyScheme::findOrFail($id);
+        $scheme->update(['is_active' => false]);
+        return back()->with('success', 'Scheme deactivated.');
     }
 
     public function auditLogs()

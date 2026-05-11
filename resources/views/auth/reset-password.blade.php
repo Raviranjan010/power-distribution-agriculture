@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login | Distribution of Electric Power for Agriculture</title>
+    <title>Reset Password | Distribution of Electric Power for Agriculture</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script>
@@ -36,7 +36,7 @@
     </div>
 
     <div class="bg-theme-panel border border-theme-border rounded-xl p-8">
-        <h2 class="text-lg font-bold text-theme-heading mb-6">Sign in to your account</h2>
+        <h2 class="text-lg font-bold text-theme-heading mb-6">Set new password</h2>
 
         @if($errors->any())
             <div class="bg-red-500/10 border border-red-500/20 text-red-400 px-4 py-3 rounded-lg mb-4 text-sm">
@@ -46,30 +46,29 @@
             </div>
         @endif
 
-        <form method="POST" action="{{ route('login') }}" class="space-y-4">
+        <form method="POST" action="{{ route('password.update') }}" class="space-y-4">
             @csrf
+            <input type="hidden" name="token" value="{{ $token }}">
+
             <div>
                 <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">Email Address</label>
-                <input type="email" name="email" value="{{ old('email') }}" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 focus:outline-none focus:border-theme-accent text-white placeholder-theme-text/50 text-sm" placeholder="name@example.com" required>
+                <input type="email" name="email" value="{{ $email ?? old('email') }}" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 focus:outline-none focus:border-theme-accent text-white placeholder-theme-text/50 text-sm" required>
             </div>
 
             <div>
-                <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">Password</label>
+                <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">New Password</label>
                 <input type="password" name="password" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 focus:outline-none focus:border-theme-accent text-white placeholder-theme-text/50 text-sm" placeholder="••••••••" required>
             </div>
 
+            <div>
+                <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">Confirm Password</label>
+                <input type="password" name="password_confirmation" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 focus:outline-none focus:border-theme-accent text-white placeholder-theme-text/50 text-sm" placeholder="••••••••" required>
+            </div>
+
             <button type="submit" class="w-full bg-theme-accent hover:bg-theme-hover text-white font-bold py-3 px-4 rounded-lg transition-all text-sm mt-2">
-                Sign In
+                Reset Password
             </button>
         </form>
-
-        <p class="text-center text-sm text-theme-text mt-4">
-            <a href="{{ route('password.request') }}" class="text-theme-accent hover:underline font-medium">Forgot your password?</a>
-        </p>
-
-        <p class="text-center text-sm text-theme-text mt-4">
-            New farmer? <a href="{{ route('register') }}" class="text-theme-accent hover:underline font-medium">Register here</a>
-        </p>
     </div>
 </div>
 
