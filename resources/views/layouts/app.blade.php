@@ -206,6 +206,12 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('admin.zones') }}"
+                                class="sidebar-link {{ request()->routeIs('admin.zones') ? 'active' : '' }}">
+                                <i class="fa-solid fa-map-location-dot w-4"></i> Zones
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('admin.audit_logs') }}"
                                 class="sidebar-link {{ request()->routeIs('admin.audit_logs') ? 'active' : '' }}">
                                 <i class="fa-solid fa-clock-rotate-left w-4"></i> Audit Logs

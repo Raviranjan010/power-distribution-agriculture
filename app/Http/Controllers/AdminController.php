@@ -219,6 +219,29 @@ class AdminController extends Controller
         return view('admin.audit_logs', compact('logs'));
     }
 
+    public function zones()
+    {
+        $zones = Zone::orderBy('state')->orderBy('district')->get();
+        return view('admin.zones', compact('zones'));
+    }
+
+    public function storeZone(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'district' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+        ]);
+
+        Zone::create([
+            'name' => $request->name,
+            'district' => $request->district,
+            'state' => $request->state,
+        ]);
+
+        return back()->with('success', 'Zone created successfully!');
+    }
+
     public function exportReport(Request $request)
     {
         $type = $request->query('type');

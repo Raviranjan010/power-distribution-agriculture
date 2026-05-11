@@ -29,9 +29,15 @@
                         {{ ucfirst($alreadyApplied->status) }}
                     </span>
                 @else
-                    <form method="POST" action="{{ route('farmer.subsidy.apply') }}">
+                    <form method="POST" action="{{ route('farmer.subsidy.apply') }}" enctype="multipart/form-data">
                         @csrf
                         <input type="hidden" name="scheme_id" value="{{ $scheme->id }}">
+                        
+                        <div class="mb-3">
+                            <label class="block text-[10px] text-theme-text font-bold uppercase mb-1">Supporting Document (PDF/Image)</label>
+                            <input type="file" name="document" class="w-full text-xs text-theme-text file:mr-4 file:py-1 file:px-3 file:rounded-md file:border-0 file:text-[10px] file:font-bold file:bg-theme-border file:text-theme-text hover:file:bg-theme-accent hover:file:text-white" required>
+                        </div>
+
                         <button type="submit" class="bg-theme-accent hover:bg-theme-hover text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
                             Apply Now
                         </button>

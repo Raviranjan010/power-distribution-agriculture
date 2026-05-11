@@ -211,6 +211,11 @@
             <div>
                 <p class="text-sm font-bold text-theme-heading">{{ $sub->consumer->name }}</p>
                 <p class="text-xs text-theme-text">{{ $sub->scheme->scheme_name }} · Applied {{ $sub->applied_at->format('d M Y') }}</p>
+                @if($sub->document_path)
+                    <a href="{{ asset('storage/' . $sub->document_path) }}" target="_blank" class="text-theme-accent hover:underline text-[10px] font-bold mt-1 inline-block">
+                        <i class="fa-solid fa-file-invoice mr-1"></i> VIEW DOCUMENT
+                    </a>
+                @endif
             </div>
             <div class="flex gap-2">
                 <form method="POST" action="{{ route('officer.subsidy.approve', $sub->id) }}">

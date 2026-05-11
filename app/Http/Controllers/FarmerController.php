@@ -289,10 +289,27 @@ class FarmerController extends Controller
 
     public function applySubsidy(Request $request)
     {
-        $request->validate(['scheme_id' => 'required|exists:subsidy_schemes,id']);
+        $request->validate([
+            'scheme_id' => 'required|exists:subsidy_schemes,id',
+            'document' => 'required|file|mimes:pdf,jpg,jpeg,png|max:2048'
+        ]);
+
         $existing = ConsumerSubsidy::where('consumer_id', Auth::id())->where('scheme_id', $request->scheme_id)->first();
         if ($existing) return back()->withErrors(['scheme_id' => 'Already applied.']);
-        ConsumerSubsidy::create(['consumer_id' => Auth::id(), 'scheme_id' => $request->scheme_id, 'status' => 'applied', 'applied_at' => now()]);
+
+        $path = null;
+        if ($request->hasFile('document')) {
+            $path = $request->file('document')->store('subsidies', 'public');
+        }
+
+        ConsumerSubsidy::create([
+            'consumer_id' => Auth::id(),
+            'scheme_id' => $request->scheme_id,
+            'document_path' => $path,
+            'status' => 'applied',
+            'applied_at' => now()
+        ]);
+
         return back()->with('success', 'Subsidy application submitted!');
     }
 

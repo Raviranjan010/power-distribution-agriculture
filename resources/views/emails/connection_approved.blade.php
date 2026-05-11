@@ -24,22 +24,22 @@
 <body>
 <div class="container">
     <div class="header">
-        <h1>⚡ Punjab State Power Corporation</h1>
+        <h1>⚡ AgriPower — Ministry of Power</h1>
         <p>Agricultural Electricity Distribution</p>
     </div>
     <div class="body">
-        <p>Dear <strong>{{ $connection->consumer->name }}</strong>,</p>
+        <p>Dear <strong>{{ $conn->consumer->name }}</strong>,</p>
         <p>We are pleased to inform you that your electricity connection request has been <span class="badge">✓ APPROVED</span></p>
 
         <div class="highlight-box">
             <table>
-                <tr><td>Connection Number</td><td>{{ $connection->connection_number }}</td></tr>
-                <tr><td>Connection Type</td><td>{{ ucwords(str_replace('_', ' ', $connection->connection_type)) }}</td></tr>
-                <tr><td>Field / Location</td><td>{{ $connection->field_name }}</td></tr>
-                <tr><td>Sanctioned Load</td><td>{{ $connection->sanctioned_load_kw }} kW</td></tr>
-                <tr><td>Meter Number</td><td>{{ $connection->meter_number }}</td></tr>
-                <tr><td>Tariff Category</td><td>{{ $connection->tariffCategory->name ?? '—' }}</td></tr>
-                <tr><td>Installation Date</td><td>{{ $connection->installation_date ? \Carbon\Carbon::parse($connection->installation_date)->format('d F Y') : '—' }}</td></tr>
+                <tr><td>Connection Number</td><td>{{ $conn->connection_number }}</td></tr>
+                <tr><td>Connection Type</td><td>{{ ucwords(str_replace('_', ' ', $conn->connection_type)) }}</td></tr>
+                <tr><td>Field / Location</td><td>{{ $conn->field_name }}</td></tr>
+                <tr><td>Sanctioned Load</td><td>{{ $conn->sanctioned_load_kw }} kW</td></tr>
+                <tr><td>Meter Number</td><td>{{ $conn->meter_number }}</td></tr>
+                <tr><td>Tariff Category</td><td>{{ $conn->tariffCategory->name ?? '—' }}</td></tr>
+                <tr><td>Installation Date</td><td>{{ $conn->installation_date ? \Carbon\Carbon::parse($conn->installation_date)->format('d F Y') : '—' }}</td></tr>
             </table>
         </div>
 
@@ -49,11 +49,11 @@
             <a href="{{ url('/farmer/connections') }}" class="btn">View My Connections</a>
         </p>
 
-        <p style="font-size: 12px; color: #888;">If you have any questions about your new connection, please contact your nearest PSPCL office or call our helpline.</p>
+        <p style="font-size: 12px; color: #888;">If you have any questions about your new connection, please contact your nearest AgriPower office or call our helpline.</p>
     </div>
     <div class="footer">
-        <p>📞 Helpline: 1800-180-1512 (Toll Free)</p>
-        <p>Punjab State Power Corporation Limited · Patiala, Punjab</p>
+        <p>📞 Helpline: 1800-111-5555 (Toll Free)</p>
+        <p>Ministry of Power · Agriculture Distribution Division</p>
         <p>This is an automated email. Please do not reply.</p>
     </div>
 </div>

@@ -160,12 +160,20 @@
             @csrf
             <div class="mb-4">
                 <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">Connection</label>
-                <select name="connection_id" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-2.5 text-white focus:border-rose-500 focus:outline-none" required>
-                    <option value="">Select Connection</option>
-                    @foreach($userConnections as $conn)
-                        <option value="{{ $conn->id }}">{{ $conn->connection_number }} — {{ ucwords(str_replace('_', ' ', $conn->connection_type)) }} ({{ $conn->field_name }})</option>
-                    @endforeach
-                </select>
+                @if($userConnections->count() > 0)
+                    <select name="connection_id" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-2.5 text-white focus:border-rose-500 focus:outline-none" required>
+                        <option value="">Select Connection</option>
+                        @foreach($userConnections as $conn)
+                            <option value="{{ $conn->id }}">{{ $conn->connection_number }} — {{ ucwords(str_replace('_', ' ', $conn->connection_type)) }} ({{ $conn->field_name }})</option>
+                        @endforeach
+                    </select>
+                @else
+                    <div class="bg-rose-500/10 border border-rose-500/20 rounded-lg p-4 text-center">
+                        <p class="text-xs text-rose-400 mb-2">You don't have any connections yet.</p>
+                        <a href="{{ route('farmer.connections') }}" class="text-[10px] font-bold text-white bg-rose-600 px-3 py-1.5 rounded uppercase">Apply for Connection</a>
+                    </div>
+                    <input type="hidden" name="connection_id" value="">
+                @endif
             </div>
             <div class="mb-4">
                 <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">Complaint Type</label>

@@ -28,14 +28,16 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::post('/users', [AdminController::class, 'storeUser'])->name('users.store');
     Route::post('/users/{id}/toggle', [AdminController::class, 'toggleUserStatus'])->name('users.toggle');
     Route::get('/tariffs', [AdminController::class, 'tariffs'])->name('tariffs');
-    Route::post('/tariffs', [AdminController::class, 'storeTariff'])->name('tariffs.store');
-    Route::patch('/tariffs/{id}', [AdminController::class, 'updateTariff'])->name('tariffs.update');
-    Route::delete('/tariffs/{id}', [AdminController::class, 'deleteTariff'])->name('tariffs.delete');
+    Route::post('/tariffs', [AdminController::class, 'storeTariff'])->name('tariff.store');
+    Route::patch('/tariffs/{id}', [AdminController::class, 'updateTariff'])->name('tariff.update');
+    Route::delete('/tariffs/{id}', [AdminController::class, 'deleteTariff'])->name('tariff.delete');
     Route::get('/subsidies', [AdminController::class, 'subsidySchemes'])->name('subsidies');
-    Route::post('/subsidies', [AdminController::class, 'storeSubsidyScheme'])->name('subsidies.store');
-    Route::patch('/subsidies/{id}', [AdminController::class, 'updateSubsidyScheme'])->name('subsidies.update');
-    Route::delete('/subsidies/{id}', [AdminController::class, 'deleteSubsidyScheme'])->name('subsidies.delete');
+    Route::post('/subsidies', [AdminController::class, 'storeSubsidyScheme'])->name('subsidy.store');
+    Route::patch('/subsidies/{id}', [AdminController::class, 'updateSubsidyScheme'])->name('subsidy.update');
+    Route::delete('/subsidies/{id}', [AdminController::class, 'deleteSubsidyScheme'])->name('subsidy.delete');
     Route::get('/audit-logs', [AdminController::class, 'auditLogs'])->name('audit_logs');
+    Route::get('/zones', [AdminController::class, 'zones'])->name('zones');
+    Route::post('/zones', [AdminController::class, 'storeZone'])->name('zones.store');
     Route::get('/export', [AdminController::class, 'exportReport'])->name('export');
 });
 

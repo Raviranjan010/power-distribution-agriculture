@@ -13,7 +13,7 @@ class LinemanController extends Controller
     public function dashboard()
     {
         $complaints = Complaint::where('assigned_to', Auth::id())->with(['consumer', 'connection'])->get();
-        $readings = MeterReading::where('lineman_id', Auth::id())
+        $myReadings = MeterReading::where('lineman_id', Auth::id())
             ->whereMonth('reading_date', now()->month)
             ->with('connection.consumer')
             ->get();
@@ -22,7 +22,7 @@ class LinemanController extends Controller
             ->with('consumer')
             ->get();
 
-        return view('lineman.dashboard', compact('complaints', 'readings', 'connections'));
+        return view('lineman.dashboard', compact('complaints', 'myReadings', 'connections'));
     }
 
     public function storeReading(Request $request)

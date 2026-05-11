@@ -13,11 +13,11 @@ class ConnectionApproved extends Mailable
 {
     use Queueable, SerializesModels;
 
-    public Connection $connection;
+    public Connection $conn;
 
-    public function __construct(Connection $connection)
+    public function __construct(Connection $conn)
     {
-        $this->connection = $connection;
+        $this->conn = $conn;
     }
 
     public function envelope(): Envelope
