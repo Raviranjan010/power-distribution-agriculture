@@ -128,13 +128,8 @@
                                 class="sidebar-link {{ request()->routeIs('farmer.bills') ? 'active' : '' }} justify-between">
                                 <span class="flex items-center gap-3"><i class="fa-solid fa-file-invoice w-4"></i> Bills &
                                     Payments</span>
-                                @php
-                                    $pendingBills = \App\Models\Bill::whereIn('connection_id',
-                                        \App\Models\Connection::where('consumer_id', Auth::id())->pluck('id')
-                                    )->where('status', 'pending')->count();
-                                @endphp
-                                @if($pendingBills > 0)
-                                    <span class="w-5 h-5 rounded-full bg-red-500/20 text-red-500 text-[10px] flex items-center justify-center font-bold">{{ $pendingBills }}</span>
+                                @if(isset($pendingBillsCount) && $pendingBillsCount > 0)
+                                    <span class="w-5 h-5 rounded-full bg-red-500/20 text-red-500 text-[10px] flex items-center justify-center font-bold">{{ $pendingBillsCount }}</span>
                                 @endif
                             </a>
                         </li>

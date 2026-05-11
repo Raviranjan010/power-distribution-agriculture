@@ -21,5 +21,14 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Paginator::useBootstrapFive();
+
+        \Illuminate\Support\Facades\View::composer('layouts.app', function ($view) {
+            if (auth()->check() && auth()->user()->role === 'farmer') {
+                $pendingBillsCount = \App\Models\Bill::where('status', 'pending')
+                    ->whereHas('connection', fn($q) => $q->where('consumer_id', auth()->id()))
+                    ->count();
+                $view->with('pendingBillsCount', $pendingBillsCount);
+            }
+        });
     }
 }
