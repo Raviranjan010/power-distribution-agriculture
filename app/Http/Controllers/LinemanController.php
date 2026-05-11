@@ -16,7 +16,7 @@ class LinemanController extends Controller
         $readings = MeterReading::where('lineman_id', Auth::id())
             ->whereMonth('reading_date', now()->month)
             ->get();
-        $connections = Connection::where('zone_id', Auth::user()->zone_id)
+        $connections = Connection::whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
             ->where('status', 'active')
             ->get();
 

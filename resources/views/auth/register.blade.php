@@ -104,7 +104,7 @@
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <div>
                     <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">State</label>
-                    <input type="text" name="state" value="{{ old('state', 'Punjab') }}" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-theme-accent text-sm" required>
+                    <input type="text" name="state" value="{{ old('state', 'Rajasthan') }}" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-theme-accent text-sm" required>
                 </div>
                 <div>
                     <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">Full Address</label>

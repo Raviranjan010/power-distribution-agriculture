@@ -10,11 +10,11 @@ class ZoneSeeder extends Seeder
     public function run(): void
     {
         $zones = [
-            ['name' => 'Nawanshahr East', 'district' => 'Nawanshahr', 'division_id' => 1],
-            ['name' => 'Nawanshahr West', 'district' => 'Nawanshahr', 'division_id' => 1],
-            ['name' => 'Phagwara Rural', 'district' => 'Phagwara', 'division_id' => 2],
-            ['name' => 'Hoshiarpur North', 'district' => 'Hoshiarpur', 'division_id' => 3],
-            ['name' => 'Jalandhar Cantt', 'district' => 'Jalandhar', 'division_id' => 4],
+            ['name' => 'Jaipur East', 'district' => 'Jaipur', 'division_id' => 1],
+            ['name' => 'Jaipur West', 'district' => 'Jaipur', 'division_id' => 1],
+            ['name' => 'Jodhpur Rural', 'district' => 'Jodhpur', 'division_id' => 2],
+            ['name' => 'Udaipur North', 'district' => 'Udaipur', 'division_id' => 3],
+            ['name' => 'Ajmer Cantt', 'district' => 'Ajmer', 'division_id' => 4],
         ];
 
         foreach ($zones as $zone) {

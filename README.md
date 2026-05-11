@@ -1,8 +1,8 @@
 # ⚡ Distribution of Electric Power for Agriculture
 
-### Ministry of Power Portal — Punjab State Electricity Board
+### Ministry of Power Portal — Rajasthan
 
-A comprehensive web portal for managing agricultural electricity distribution across Punjab. The system digitises connection management, metering, billing, complaint resolution, and subsidy administration — connecting farmers, field linemen, SDO officers, and administrators on a single platform.
+A comprehensive web portal for managing agricultural electricity distribution across Rajasthan. The system digitises connection management, metering, billing, complaint resolution, and subsidy administration — connecting farmers, field linemen, SDO officers, and administrators on a single platform.
 
 ---
 
@@ -90,7 +90,14 @@ php artisan migrate
 # 7. Seed the database with demo data
 php artisan db:seed
 
-# 8. Start the development server
+# 8. Link storage for avatar and file uploads
+php artisan storage:link
+
+# 9. Install and compile frontend assets (Required for CSS to load)
+npm install
+npm run build
+
+# 10. Start the development server
 php artisan serve
 ```
 

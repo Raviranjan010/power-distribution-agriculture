@@ -209,7 +209,7 @@ class AdminController extends Controller
                     'farmer_name' => $p->bill->connection->consumer->name ?? '',
                     'amount' => $p->amount,
                     'method' => $p->payment_method,
-                    'date' => $p->payment_date,
+                    'date' => $p->paid_at?->format('d/m/Y'),
                 ];
             });
             $headers = ['Transaction ID', 'Farmer Name', 'Amount', 'Method', 'Date'];

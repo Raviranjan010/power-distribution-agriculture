@@ -140,7 +140,7 @@ class FarmerController extends Controller
         }
 
         $razorpayOrderId = null;
-        if (env('RAZORPAY_KEY') && env('RAZORPAY_SECRET')) {
+        if (env('RAZORPAY_KEY') && env('RAZORPAY_SECRET') && class_exists('\Razorpay\Api\Api')) {
             $api = new \Razorpay\Api\Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
             $order = $api->order->create([
                 'receipt' => (string)$bill->id,
@@ -164,7 +164,7 @@ class FarmerController extends Controller
             return redirect()->route('farmer.bills')->withErrors(['payment' => 'This bill is already paid.']);
         }
 
-        if ($request->has('razorpay_payment_id') && env('RAZORPAY_KEY') && env('RAZORPAY_SECRET')) {
+        if ($request->has('razorpay_payment_id') && env('RAZORPAY_KEY') && env('RAZORPAY_SECRET') && class_exists('\Razorpay\Api\Api')) {
             $api = new \Razorpay\Api\Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
             try {
                 $attributes = [

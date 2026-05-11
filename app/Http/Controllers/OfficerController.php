@@ -67,7 +67,9 @@ class OfficerController extends Controller
             'status' => 'active', 'installation_date' => now(), 'sdo_id' => Auth::id(),
         ]);
         $conn->load('consumer', 'tariffCategory');
-        Mail::to($conn->consumer->email)->send(new ConnectionApproved($conn));
+        try {
+            Mail::to($conn->consumer->email)->send(new ConnectionApproved($conn));
+        } catch (\Exception $e) {}
         return back()->with('success', 'Connection ' . $conn->connection_number . ' approved!');
     }
 
@@ -97,7 +99,9 @@ class OfficerController extends Controller
             ->firstOrFail();
         $c->update(['status' => 'resolved', 'resolution_remarks' => $request->input('resolution_remarks', 'Resolved by SDO.'), 'resolved_at' => now()]);
         $c->load('consumer');
-        Mail::to($c->consumer->email)->send(new ComplaintResolved($c));
+        try {
+            Mail::to($c->consumer->email)->send(new ComplaintResolved($c));
+        } catch (\Exception $e) {}
         return back()->with('success', 'Complaint resolved.');
     }
 
@@ -139,7 +143,9 @@ class OfficerController extends Controller
                 'status' => 'pending', 'generated_by' => Auth::id(),
             ]);
             $bill->load('connection.consumer');
-            Mail::to($conn->consumer->email ?? $bill->connection->consumer->email)->send(new BillGenerated($bill));
+            try {
+                Mail::to($conn->consumer->email ?? $bill->connection->consumer->email)->send(new BillGenerated($bill));
+            } catch (\Exception $e) {}
             $count++;
         }
         return back()->with('success', $count . ' bills generated.');
