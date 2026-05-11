@@ -23,6 +23,7 @@ class ZoneSeeder extends Seeder
             ['name' => 'Surat East', 'district' => 'Surat', 'state' => 'Gujarat', 'division_id' => 10],
             ['name' => 'Pune South', 'district' => 'Pune', 'state' => 'Maharashtra', 'division_id' => 11],
             ['name' => 'Nagpur North', 'district' => 'Nagpur', 'state' => 'Maharashtra', 'division_id' => 12],
+            ['name' => 'Kapurthala Central', 'district' => 'Kapurthala', 'state' => 'Punjab', 'division_id' => 5],
             ['name' => 'Patna East', 'district' => 'Patna', 'state' => 'Bihar', 'division_id' => 13],
         ];
 
