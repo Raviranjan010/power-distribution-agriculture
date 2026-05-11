@@ -64,13 +64,18 @@
                             <span class="px-2.5 py-1 rounded-md text-[10px] font-bold {{ $colors[$bill->status] ?? 'bg-theme-border text-theme-text' }}">{{ ucwords(str_replace('_', ' ', $bill->status)) }}</span>
                         </td>
                         <td class="py-3">
-                            @if($bill->status === 'pending')
-                                <a href="{{ route('farmer.bill.pay.confirm', $bill->id) }}" class="inline-block bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-md transition-colors">
-                                    <i class="fa-solid fa-credit-card mr-1"></i> Pay ₹{{ number_format($bill->net_payable, 0) }}
+                            <div class="flex items-center gap-2">
+                                @if($bill->status === 'pending')
+                                    <a href="{{ route('farmer.bill.pay.confirm', $bill->id) }}" class="inline-block bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-md transition-colors">
+                                        <i class="fa-solid fa-credit-card mr-1"></i> Pay
+                                    </a>
+                                @elseif($bill->status === 'paid')
+                                    <span class="text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-check mr-1"></i> Paid</span>
+                                @endif
+                                <a href="{{ route('farmer.bill.download', $bill->id) }}" class="inline-block bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white text-[10px] font-bold px-3 py-1.5 rounded-md transition-colors" title="Download PDF">
+                                    <i class="fa-solid fa-file-pdf"></i>
                                 </a>
-                            @elseif($bill->status === 'paid')
-                                <span class="text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-check mr-1"></i> Paid</span>
-                            @endif
+                            </div>
                         </td>
                     </tr>
                 @empty

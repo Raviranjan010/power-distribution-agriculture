@@ -12,6 +12,7 @@ use App\Models\Payment;
 use App\Models\ConsumerSubsidy;
 use App\Models\SubsidyScheme;
 use Carbon\Carbon;
+use Barryvdh\DomPDF\Facade\Pdf;
 
 class FarmerController extends Controller
 {
@@ -299,5 +300,15 @@ class FarmerController extends Controller
     public function help()
     {
         return view('farmer.help');
+    }
+
+    public function downloadBill($id)
+    {
+        $user = Auth::user();
+        $bill = Bill::with(['connection.consumer', 'connection.tariffCategory'])->findOrFail($id);
+        Connection::where('id', $bill->connection_id)->where('consumer_id', $user->id)->firstOrFail();
+
+        $pdf = Pdf::loadView('farmer.bill_pdf', compact('bill'));
+        return $pdf->download('Bill-' . $bill->bill_number . '.pdf');
     }
 }

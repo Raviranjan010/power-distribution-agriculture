@@ -48,6 +48,7 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::get('/bills', [FarmerController::class, 'bills'])->name('bills');
     Route::get('/bills/{id}/pay-confirm', [FarmerController::class, 'payConfirm'])->name('bill.pay.confirm');
     Route::post('/bills/{id}/pay', [FarmerController::class, 'payBill'])->name('bill.pay');
+    Route::get('/bills/{id}/download', [FarmerController::class, 'downloadBill'])->name('bill.download');
     Route::get('/usage', [FarmerController::class, 'usage'])->name('usage');
     Route::get('/usage/chart-data', [FarmerController::class, 'usageChart'])->name('usage.chart');
     Route::get('/complaints', [FarmerController::class, 'complaints'])->name('complaints');
