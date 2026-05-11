@@ -24,17 +24,20 @@ RUN composer install --no-dev --optimize-autoloader --no-interaction
 # Install Node dependencies and build frontend assets
 RUN npm install && npm run build
 
-# Setup Nginx — store as template, startup script will create the active config
+# Setup Nginx configuration
+# Copy our custom config as a template
 COPY docker/nginx.conf /etc/nginx/sites-available/default.template
-RUN rm -f /etc/nginx/sites-enabled/default /etc/nginx/sites-available/default
+
+# Ensure log directories are linked to stdout/stderr
+RUN ln -sf /dev/stdout /var/log/nginx/access.log && \
+    ln -sf /dev/stderr /var/log/nginx/error.log
 
 # Copy startup script and make it executable
 COPY docker/start.sh /usr/local/bin/start.sh
 RUN chmod +x /usr/local/bin/start.sh
 
-# Set permissions
-RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# Set initial permissions (start.sh will refine these)
+RUN chown -R www-data:www-data /var/www
 
 # Render uses the PORT env variable (default 10000)
 EXPOSE 10000

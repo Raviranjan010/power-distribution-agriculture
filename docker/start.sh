@@ -1,84 +1,76 @@
 #!/bin/bash
 
-echo "==> Starting AgriPower Portal..."
-echo "==> PHP Version: $(php -v | head -n 1)"
+# Ensure we are in the right directory
+cd /var/www
+
+echo "==> Starting AgriPower Portal Startup Script..."
 
 # Use Render's PORT or fallback to 80
 PORT="${PORT:-80}"
-echo "==> Using PORT: $PORT"
+echo "==> Using Port: $PORT"
 
-# Substitute ONLY the port into nginx config using sed (safe for nginx variables)
+# 1. Prepare Nginx Config
+echo "==> Preparing Nginx configuration..."
+mkdir -p /etc/nginx/sites-available /etc/nginx/sites-enabled
 sed "s/RENDER_PORT/$PORT/g" /etc/nginx/sites-available/default.template > /etc/nginx/sites-enabled/default
 
-# Test nginx config
-echo "==> Testing nginx config..."
-nginx -t 2>&1
+# 2. Setup storage permissions
+echo "==> Setting permissions..."
+mkdir -p storage/framework/{sessions,views,cache}
+mkdir -p storage/logs
+mkdir -p storage/app/public
+mkdir -p bootstrap/cache
+chown -R www-data:www-data /var/www
+chmod -R 775 storage bootstrap/cache
 
-# Ensure storage directories exist with proper permissions
-echo "==> Setting up storage directories..."
-mkdir -p /var/www/storage/framework/sessions
-mkdir -p /var/www/storage/framework/views
-mkdir -p /var/www/storage/framework/cache/data
-mkdir -p /var/www/storage/logs
-mkdir -p /var/www/storage/app/public
-chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
-chmod -R 775 /var/www/storage /var/www/bootstrap/cache
+# 3. Handle Laravel setup tasks
+echo "==> Running Laravel setup tasks..."
 
-# Create storage link (ignore if already exists)
-php artisan storage:link 2>/dev/null || true
+# Wait a bit for the DB to be ready if it's just starting (Aiven DB is usually always up)
+sleep 2
 
-# Clear stale caches before rebuilding
-echo "==> Clearing caches..."
-php artisan config:clear 2>&1 || true
-php artisan route:clear 2>&1 || true
-php artisan view:clear 2>&1 || true
-php artisan cache:clear 2>&1 || true
+# Check if artisan is working and show info
+php artisan --version || echo "==> ERROR: artisan not found or PHP failing"
 
-# Debug: show key env vars (without revealing secrets)
-echo "==> DB_CONNECTION: ${DB_CONNECTION:-not set (will default to mysql)}"
-echo "==> DB_HOST: ${DB_HOST:-not set}"
-echo "==> DB_DATABASE: ${DB_DATABASE:-not set}"
-echo "==> APP_ENV: ${APP_ENV:-not set}"
+# Clear caches
+php artisan config:clear
+php artisan cache:clear
 
-# Generate application cache for production
-echo "==> Caching config..."
-php artisan config:cache 2>&1 || {
-    echo "==> WARNING: config:cache failed, clearing it..."
-    php artisan config:clear 2>&1 || true
-}
-php artisan route:cache 2>&1 || true
-php artisan view:cache 2>&1 || true
-
-# Run migrations safely (NOT migrate:fresh — that drops everything)
+# Run migrations
 echo "==> Running database migrations..."
-php artisan migrate --force 2>&1 || {
-    echo "==> WARNING: Migrations had issues, but continuing..."
-}
+php artisan migrate --force 2>&1 || echo "==> WARNING: Migrations failed. Check your DB credentials."
 
-# Run seeders separately (only if tables are empty)
+# Run seeders
 echo "==> Running database seeders..."
-php artisan db:seed --force 2>&1 || {
-    echo "==> WARNING: Seeding had issues (tables may already have data), continuing..."
-}
+php artisan db:seed --force 2>&1 || echo "==> WARNING: Seeding failed. This is expected if data already exists."
 
-# Start Nginx in background
-echo "==> Starting Nginx..."
-service nginx start 2>&1 || {
-    echo "==> Nginx service failed, trying direct start..."
-    nginx 2>&1 || echo "==> ERROR: Nginx failed to start!"
-}
+# Cache config for performance
+php artisan config:cache
+php artisan route:cache
+php artisan view:cache
 
-# Verify nginx is running
-sleep 1
-if pgrep nginx > /dev/null; then
-    echo "==> Nginx is running."
-else
-    echo "==> ERROR: Nginx is NOT running!"
-fi
+# Create storage link
+php artisan storage:link --force 2>/dev/null || true
 
-echo "==> Starting PHP-FPM on port 9000..."
-echo "==> Application should be available on port $PORT"
+# 4. Start PHP-FPM in background
+echo "==> Starting PHP-FPM..."
+php-fpm -D
 
-# Run PHP-FPM in foreground so the container stays alive
-# Using exec replaces the shell process with php-fpm for proper signal handling
-exec php-fpm --nodaemonize
+# Wait for PHP-FPM to be ready on port 9000
+echo "==> Waiting for PHP-FPM to listen on port 9000..."
+MAX_RETRIES=10
+COUNT=0
+while ! (timeout 1 bash -c "cat < /dev/null > /dev/tcp/127.0.0.1/9000") >/dev/null 2>&1; do
+    echo "    Waiting for PHP-FPM... ($COUNT/$MAX_RETRIES)"
+    sleep 2
+    COUNT=$((COUNT + 1))
+    if [ $COUNT -ge $MAX_RETRIES ]; then
+        echo "==> ERROR: PHP-FPM failed to start on port 9000"
+        break
+    fi
+done
+
+# 5. Start Nginx in foreground
+echo "==> Starting Nginx in foreground..."
+# We run nginx in foreground so Render can manage the process
+exec nginx -g 'daemon off;'
