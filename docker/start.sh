@@ -26,25 +26,21 @@ chmod -R 775 storage bootstrap/cache
 # 3. Handle Laravel setup tasks
 echo "==> Running Laravel setup tasks..."
 
-# Force APP_DEBUG to true for easier debugging of 500 errors
+# Force critical env vars for Render stability
 export APP_DEBUG=true
+export SESSION_DRIVER=cookie
+export SESSION_SECURE_COOKIE=true
 
 # Wait for DB
 sleep 2
 
-# Check Migration Status
-echo "==> Migration Status:"
-php artisan migrate:status 2>&1 || echo "==> Could not check migration status."
-
 # Run migrations
 echo "==> Running database migrations..."
-# Using --force for production
 php artisan migrate --force 2>&1
 
-# Run seeders only if they haven't run (we can check a table)
-# For now, just run them and ignore errors
+# Run seeders
 echo "==> Running database seeders..."
-php artisan db:seed --force 2>&1 || echo "==> Seeders finished (might have skipped existing data)."
+php artisan db:seed --force 2>&1 || echo "==> Seeders finished."
 
 # Cache config
 echo "==> Caching..."
