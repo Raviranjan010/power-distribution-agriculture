@@ -94,17 +94,22 @@
                     <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">District</label>
                     <select name="district" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-theme-accent text-sm" required>
                         <option value="">Select District</option>
-                        <option value="Nawanshahr">Nawanshahr</option>
-                        <option value="Phagwara">Phagwara</option>
-                        <option value="Hoshiarpur">Hoshiarpur</option>
-                        <option value="Jalandhar">Jalandhar</option>
+                        @foreach($zones as $zone)
+                            <option value="{{ $zone->district }}" {{ old('district') == $zone->district ? 'selected' : '' }}>{{ $zone->district }}</option>
+                        @endforeach
                     </select>
                 </div>
             </div>
 
-            <div>
-                <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">Full Address</label>
-                <textarea name="address" rows="2" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-theme-accent text-sm" required>{{ old('address') }}</textarea>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">State</label>
+                    <input type="text" name="state" value="{{ old('state', 'Punjab') }}" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-theme-accent text-sm" required>
+                </div>
+                <div>
+                    <label class="block text-xs font-bold text-theme-text tracking-widest uppercase mb-2">Full Address</label>
+                    <textarea name="address" rows="1" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-4 py-3 text-white focus:outline-none focus:border-theme-accent text-sm" required>{{ old('address') }}</textarea>
+                </div>
             </div>
             
             <button type="submit" class="w-full bg-theme-accent hover:bg-theme-hover text-white font-bold py-3 px-4 rounded-lg transition-all text-sm mt-2">

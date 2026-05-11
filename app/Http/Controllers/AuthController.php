@@ -57,7 +57,8 @@ class AuthController extends Controller
             'phone' => 'required|string|max:15',
             'aadhar_number' => 'required|string|max:12',
             'village' => 'required|string',
-            'district' => 'required|string',
+            'district' => 'required|exists:zones,district',
+            'state' => 'required|string',
             'address' => 'required|string',
         ]);
 
@@ -84,7 +85,7 @@ class AuthController extends Controller
             'village' => $request->village,
             'district' => $request->district,
             'address' => $request->address,
-            'state' => 'Punjab',
+            'state' => $request->state,
             'aadhar_number' => $request->aadhar_number,
             'zone_id' => $zone?->id,
         ]);

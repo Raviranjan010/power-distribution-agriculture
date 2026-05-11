@@ -124,6 +124,30 @@ class FarmerController extends Controller
         return view('farmer.bills', compact('bills', 'totalOutstanding', 'totalPaidThisYear', 'nextDue'));
     }
 
+    public function payConfirm($id)
+    {
+        $user = Auth::user();
+        $bill = Bill::findOrFail($id);
+        $conn = Connection::where('id', $bill->connection_id)->where('consumer_id', $user->id)->firstOrFail();
+
+        if ($bill->status === 'paid') {
+            return redirect()->route('farmer.bills')->withErrors(['payment' => 'This bill is already paid.']);
+        }
+
+        $razorpayOrderId = null;
+        if (env('RAZORPAY_KEY') && env('RAZORPAY_SECRET')) {
+            $api = new \Razorpay\Api\Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+            $order = $api->order->create([
+                'receipt' => (string)$bill->id,
+                'amount' => $bill->net_payable * 100,
+                'currency' => 'INR'
+            ]);
+            $razorpayOrderId = $order['id'];
+        }
+
+        return view('farmer.pay_confirm', compact('bill', 'conn', 'razorpayOrderId'));
+    }
+
     public function payBill(Request $request, $id)
     {
         $user = Auth::user();
@@ -132,10 +156,26 @@ class FarmerController extends Controller
         $conn = Connection::where('id', $bill->connection_id)->where('consumer_id', $user->id)->firstOrFail();
 
         if ($bill->status === 'paid') {
-            return back()->withErrors(['payment' => 'This bill is already paid.']);
+            return redirect()->route('farmer.bills')->withErrors(['payment' => 'This bill is already paid.']);
         }
 
-        $txnId = 'TXN-' . now()->format('YmdHis') . '-' . $bill->id;
+        if ($request->has('razorpay_payment_id') && env('RAZORPAY_KEY') && env('RAZORPAY_SECRET')) {
+            $api = new \Razorpay\Api\Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+            try {
+                $attributes = [
+                    'razorpay_order_id' => $request->razorpay_order_id,
+                    'razorpay_payment_id' => $request->razorpay_payment_id,
+                    'razorpay_signature' => $request->razorpay_signature
+                ];
+                $api->utility->verifyPaymentSignature($attributes);
+                $txnId = $request->razorpay_payment_id;
+            } catch(\Exception $e) {
+                return back()->withErrors(['payment' => 'Payment verification failed.']);
+            }
+        } else {
+            sleep(1);
+            $txnId = 'TXN-' . now()->format('YmdHis') . '-' . $bill->id;
+        }
 
         Payment::create([
             'bill_id' => $bill->id,
@@ -149,7 +189,7 @@ class FarmerController extends Controller
 
         $bill->update(['status' => 'paid']);
 
-        return back()->with('success', 'Payment successful! Transaction ID: ' . $txnId);
+        return redirect()->route('farmer.bills')->with('success', 'Payment successful! Transaction ID: ' . $txnId);
     }
 
     public function connections()

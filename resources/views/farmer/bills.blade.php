@@ -65,12 +65,9 @@
                         </td>
                         <td class="py-3">
                             @if($bill->status === 'pending')
-                                <form method="POST" action="{{ route('farmer.bill.pay', $bill->id) }}">
-                                    @csrf
-                                    <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-md transition-colors">
-                                        <i class="fa-solid fa-credit-card mr-1"></i> Pay ₹{{ number_format($bill->net_payable, 0) }}
-                                    </button>
-                                </form>
+                                <a href="{{ route('farmer.bill.pay.confirm', $bill->id) }}" class="inline-block bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-bold px-3 py-1.5 rounded-md transition-colors">
+                                    <i class="fa-solid fa-credit-card mr-1"></i> Pay ₹{{ number_format($bill->net_payable, 0) }}
+                                </a>
                             @elseif($bill->status === 'paid')
                                 <span class="text-[10px] text-emerald-400 font-bold"><i class="fa-solid fa-check mr-1"></i> Paid</span>
                             @endif

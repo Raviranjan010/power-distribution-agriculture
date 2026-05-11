@@ -43,7 +43,7 @@
                 </div>
                 <span class="px-2.5 py-1 rounded-md text-[10px] font-bold bg-[#2b1f13] text-amber-500">Pending</span>
             </div>
-            <form method="POST" action="{{ route('sdo.connection.approve', $conn->id) }}" class="flex items-end gap-3">
+            <form method="POST" action="{{ route('officer.connection.approve', $conn->id) }}" class="flex items-end gap-3">
                 @csrf
                 <div class="flex-grow">
                     <label class="block text-[10px] text-theme-text font-bold uppercase mb-1">Assign Tariff</label>
@@ -54,9 +54,9 @@
                     </select>
                 </div>
                 <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">Approve</button>
-                <a href="{{ route('sdo.connection.reject', $conn->id) }}" onclick="event.preventDefault(); document.getElementById('reject-form-{{ $conn->id }}').submit();" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">Reject</a>
+                <a href="{{ route('officer.connection.reject', $conn->id) }}" onclick="event.preventDefault(); document.getElementById('reject-form-{{ $conn->id }}').submit();" class="bg-red-600/20 hover:bg-red-600 text-red-400 hover:text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">Reject</a>
             </form>
-            <form id="reject-form-{{ $conn->id }}" method="POST" action="{{ route('sdo.connection.reject', $conn->id) }}" class="hidden">@csrf</form>
+            <form id="reject-form-{{ $conn->id }}" method="POST" action="{{ route('officer.connection.reject', $conn->id) }}" class="hidden">@csrf</form>
         </div>
     @empty
         <p class="text-sm text-theme-text">No pending connection requests in your zone.</p>
@@ -67,7 +67,7 @@
 <div class="utilitarian-card p-6 mb-6">
     <div class="flex justify-between items-center mb-6">
         <h3 class="text-lg font-bold text-theme-heading">Meter Readings Awaiting Verification</h3>
-        <form method="POST" action="{{ route('sdo.bills.generate') }}">
+        <form method="POST" action="{{ route('officer.generate_bills') }}">
             @csrf
             <button type="submit" class="bg-theme-accent hover:bg-theme-hover text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors flex items-center gap-2">
                 <i class="fa-solid fa-receipt"></i> Generate Bills for Zone
@@ -81,7 +81,7 @@
                 <p class="text-sm font-medium text-theme-heading">{{ $reading->connection->consumer->name }}</p>
                 <p class="text-xs text-theme-text">{{ $reading->reading_date->format('d M Y') }} · {{ number_format($reading->units_consumed) }} kWh · By {{ $reading->lineman->name ?? 'Unknown' }}</p>
             </div>
-            <form method="POST" action="{{ route('sdo.reading.verify', $reading->id) }}">
+            <form method="POST" action="{{ route('officer.reading.verify', $reading->id) }}">
                 @csrf
                 <button type="submit" class="bg-indigo-600/20 hover:bg-indigo-600 text-indigo-400 hover:text-white text-xs font-bold px-4 py-2 rounded-lg transition-colors">
                     <i class="fa-solid fa-check mr-1"></i> Verify
@@ -110,7 +110,7 @@
                 <span class="px-2.5 py-1 rounded-md text-[10px] font-bold {{ $sc[$complaint->status] ?? '' }} flex-shrink-0">{{ ucwords(str_replace('_',' ',$complaint->status)) }}</span>
             </div>
             @if($complaint->status === 'filed')
-                <form method="POST" action="{{ route('sdo.complaint.assign', $complaint->id) }}" class="flex items-end gap-3 mt-3 pt-3 border-t border-theme-border/50">
+                <form method="POST" action="{{ route('officer.complaint.assign', $complaint->id) }}" class="flex items-end gap-3 mt-3 pt-3 border-t border-theme-border/50">
                     @csrf
                     <div class="flex-grow">
                         <select name="assigned_to" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-3 py-2 text-white text-sm" required>
@@ -140,11 +140,11 @@
                 <p class="text-xs text-theme-text">{{ $sub->scheme->scheme_name }} · Applied {{ $sub->applied_at->format('d M Y') }}</p>
             </div>
             <div class="flex gap-2">
-                <form method="POST" action="{{ route('sdo.subsidy.approve', $sub->id) }}">
+                <form method="POST" action="{{ route('officer.subsidy.approve', $sub->id) }}">
                     @csrf
                     <button type="submit" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-bold px-3 py-2 rounded-lg">Approve</button>
                 </form>
-                <form method="POST" action="{{ route('sdo.subsidy.reject', $sub->id) }}">
+                <form method="POST" action="{{ route('officer.subsidy.reject', $sub->id) }}">
                     @csrf
                     <button type="submit" class="bg-red-600/20 hover:bg-red-500 text-red-400 hover:text-white text-xs font-bold px-3 py-2 rounded-lg">Reject</button>
                 </form>

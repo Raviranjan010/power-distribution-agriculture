@@ -5,6 +5,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\FarmerController;
 use App\Http\Controllers\OfficerController;
+use App\Http\Controllers\LinemanController;
 
 Route::get('/', function () {
     return view('welcome');
@@ -44,6 +45,7 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::get('/connections', [FarmerController::class, 'connections'])->name('connections');
     Route::post('/connection', [FarmerController::class, 'storeConnection'])->name('connection.store');
     Route::get('/bills', [FarmerController::class, 'bills'])->name('bills');
+    Route::get('/bills/{id}/pay-confirm', [FarmerController::class, 'payConfirm'])->name('bill.pay.confirm');
     Route::post('/bills/{id}/pay', [FarmerController::class, 'payBill'])->name('bill.pay');
     Route::get('/usage', [FarmerController::class, 'usage'])->name('usage');
     Route::get('/usage/chart-data', [FarmerController::class, 'usageChart'])->name('usage.chart');
@@ -52,4 +54,10 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::get('/subsidies', [FarmerController::class, 'subsidies'])->name('subsidies');
     Route::post('/subsidy/apply', [FarmerController::class, 'applySubsidy'])->name('subsidy.apply');
     Route::get('/help', [FarmerController::class, 'help'])->name('help');
+});
+
+Route::middleware(['auth', 'role:lineman'])->prefix('lineman')->name('lineman.')->group(function () {
+    Route::get('/dashboard', [LinemanController::class, 'dashboard'])->name('dashboard');
+    Route::post('/reading', [LinemanController::class, 'storeReading'])->name('reading.store');
+    Route::post('/complaint/{id}', [LinemanController::class, 'updateComplaint'])->name('complaint.update');
 });
