@@ -11,6 +11,7 @@ use App\Models\Bill;
 use App\Models\Payment;
 use App\Models\ConsumerSubsidy;
 use App\Models\SubsidyScheme;
+use App\Models\PowerSchedule;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -57,10 +58,13 @@ class FarmerController extends Controller
             ->whereYear('reading_date', Carbon::now()->subMonth()->year)
             ->sum('units_consumed');
 
+        $schedules = PowerSchedule::where('zone_id', $user->zone_id)
+            ->where('scheduled_date', '>=', today())->orderBy('scheduled_date')->get();
+
         return view('farmer.dashboard', compact(
             'activeConnections', 'pendingConnections', 'unitsThisMonth', 'activeSubsidies', 'latestBill',
             'pendingBillsCount', 'connections', 'complaints', 'usageLabels', 'usageData',
-            'connectionUsage', 'subsidies', 'previousMonthUnits'
+            'connectionUsage', 'subsidies', 'previousMonthUnits', 'schedules'
         ));
     }
 
@@ -209,7 +213,7 @@ class FarmerController extends Controller
     public function complaints()
     {
         $user = Auth::user();
-        $allComplaints = Complaint::where('consumer_id', $user->id)->with('connection')
+        $allComplaints = Complaint::where('consumer_id', $user->id)->with(['connection', 'assignedTo'])
             ->orderByDesc('filed_at')->paginate(10);
 
         $totalComplaints = Complaint::where('consumer_id', $user->id)->count();
@@ -310,5 +314,34 @@ class FarmerController extends Controller
 
         $pdf = Pdf::loadView('farmer.bill_pdf', compact('bill'));
         return $pdf->download('Bill-' . $bill->bill_number . '.pdf');
+    }
+
+    public function profile()
+    {
+        return view('farmer.profile', ['user' => Auth::user()]);
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = Auth::user();
+        $request->validate([
+            'phone' => 'required|digits:10',
+            'address' => 'required|string|max:255',
+            'village' => 'required|string|max:255',
+            'avatar' => 'nullable|image|max:2048',
+        ]);
+
+        $user->phone = $request->phone;
+        $user->address = $request->address;
+        $user->village = $request->village;
+
+        if ($request->hasFile('avatar')) {
+            $path = $request->file('avatar')->store('avatars', 'public');
+            $user->avatar = $path;
+        }
+
+        $user->save();
+
+        return back()->with('success', 'Profile updated successfully.');
     }
 }

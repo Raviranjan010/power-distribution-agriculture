@@ -129,6 +129,68 @@
     @endforelse
 </div>
 
+<!-- Power Schedules -->
+<div class="utilitarian-card p-6 mb-6">
+    <div class="flex justify-between items-center mb-6">
+        <h3 class="text-lg font-bold text-theme-heading">Power Schedules & Outages</h3>
+    </div>
+    
+    <form method="POST" action="{{ route('officer.schedule.store') }}" class="mb-6 border border-theme-border rounded-lg p-4 bg-theme-bg/50">
+        @csrf
+        <h4 class="text-sm font-bold text-theme-heading mb-3">Post New Schedule</h4>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+                <label class="block text-[10px] text-theme-text font-bold uppercase mb-1">Title</label>
+                <input type="text" name="title" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-3 py-2 text-white text-sm" required placeholder="e.g. Maintenance Outage">
+            </div>
+            <div>
+                <label class="block text-[10px] text-theme-text font-bold uppercase mb-1">Date</label>
+                <input type="date" name="scheduled_date" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-3 py-2 text-white text-sm" required min="{{ date('Y-m-d') }}">
+            </div>
+            <div>
+                <label class="block text-[10px] text-theme-text font-bold uppercase mb-1">From Time</label>
+                <input type="time" name="from_time" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-3 py-2 text-white text-sm" required>
+            </div>
+            <div>
+                <label class="block text-[10px] text-theme-text font-bold uppercase mb-1">To Time</label>
+                <input type="time" name="to_time" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-3 py-2 text-white text-sm" required>
+            </div>
+            <div class="md:col-span-2">
+                <label class="block text-[10px] text-theme-text font-bold uppercase mb-1">Reason (Optional)</label>
+                <input type="text" name="reason" class="w-full bg-[#0A110D] border border-theme-border rounded-lg px-3 py-2 text-white text-sm" placeholder="e.g. Substation upgrading">
+            </div>
+        </div>
+        <button type="submit" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors">Post Schedule</button>
+    </form>
+
+    <div>
+        <h4 class="text-sm font-bold text-theme-heading mb-3">Upcoming Schedules</h4>
+        @forelse($schedules as $schedule)
+            <div class="flex justify-between items-center border border-theme-border rounded-lg p-3 bg-theme-bg/30 mb-2">
+                <div>
+                    <h5 class="text-sm font-bold text-theme-heading">{{ $schedule->title }}</h5>
+                    <p class="text-xs text-theme-text">
+                        {{ \Carbon\Carbon::parse($schedule->scheduled_date)->format('d M Y') }} • 
+                        {{ \Carbon\Carbon::parse($schedule->from_time)->format('h:i A') }} - {{ \Carbon\Carbon::parse($schedule->to_time)->format('h:i A') }}
+                    </p>
+                    @if($schedule->reason)
+                        <p class="text-[10px] text-theme-text mt-1 italic">{{ $schedule->reason }}</p>
+                    @endif
+                </div>
+                <form method="POST" action="{{ route('officer.schedule.delete', $schedule->id) }}">
+                    @csrf
+                    @method('DELETE')
+                    <button type="submit" class="text-red-400 hover:text-red-300 text-sm" title="Delete Schedule">
+                        <i class="fa-solid fa-trash"></i>
+                    </button>
+                </form>
+            </div>
+        @empty
+            <p class="text-sm text-theme-text">No power schedules posted.</p>
+        @endforelse
+    </div>
+</div>
+
 <!-- Pending Subsidy Applications -->
 @if($pendingSubsidies->count() > 0)
 <div class="utilitarian-card p-6">

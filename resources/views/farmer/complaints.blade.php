@@ -50,23 +50,86 @@
                             · <i class="fa-solid fa-check text-[10px] mr-1 text-emerald-400"></i> Resolved {{ $complaint->resolved_at->format('d M Y') }}
                         @endif
                     </p>
-                    @if($complaint->resolution_remarks)
-                        <div class="mt-2 p-2 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
-                            <p class="text-xs text-emerald-400"><i class="fa-solid fa-message mr-1"></i> {{ $complaint->resolution_remarks }}</p>
-                        </div>
-                    @endif
                 </div>
                 @php
                     $sc = [
                         'filed' => 'bg-blue-500/20 text-blue-400',
                         'assigned' => 'bg-amber-500/20 text-amber-500',
                         'in_review' => 'bg-indigo-500/20 text-indigo-400',
+                        'in_progress' => 'bg-indigo-500/20 text-indigo-400',
                         'resolved' => 'bg-emerald-500/20 text-emerald-400',
                         'closed' => 'bg-theme-border text-theme-text',
                     ];
                 @endphp
                 <span class="px-2.5 py-1 rounded-md text-[10px] font-bold {{ $sc[$complaint->status] ?? '' }} flex-shrink-0 ml-4">{{ ucwords(str_replace('_',' ',$complaint->status)) }}</span>
             </div>
+
+            {{-- Status Timeline --}}
+            @php
+                $statusMap = ['filed' => 0, 'assigned' => 1, 'in_review' => 2, 'in_progress' => 2, 'resolved' => 3, 'closed' => 3];
+                $currentStage = $statusMap[$complaint->status] ?? 0;
+                $stages = [
+                    ['label' => 'Filed',       'icon' => 'fa-solid fa-file-pen'],
+                    ['label' => 'Assigned',    'icon' => 'fa-solid fa-user-check'],
+                    ['label' => 'In Progress', 'icon' => 'fa-solid fa-wrench'],
+                    ['label' => 'Resolved',    'icon' => 'fa-solid fa-circle-check'],
+                ];
+            @endphp
+            <div class="mt-4 pt-4 border-t border-theme-border/50">
+                <div class="flex items-start justify-between relative">
+                    {{-- Connecting line (background) --}}
+                    <div class="absolute top-[14px] left-[28px] right-[28px] h-[2px] bg-[#1F2F24] z-0"></div>
+                    {{-- Connecting line (progress fill) --}}
+                    @if($currentStage > 0)
+                        <div class="absolute top-[14px] left-[28px] h-[2px] z-[1]"
+                             style="width: {{ ($currentStage / 3) * 100 }}%; max-width: calc(100% - 56px);">
+                            <div class="h-full bg-emerald-500 rounded-full"></div>
+                        </div>
+                    @endif
+
+                    @foreach($stages as $i => $stage)
+                        <div class="flex flex-col items-center relative z-10" style="width: 25%;">
+                            @if($i < $currentStage)
+                                {{-- Completed --}}
+                                <div class="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center text-white text-[10px] shadow-lg shadow-emerald-500/20">
+                                    <i class="fa-solid fa-check"></i>
+                                </div>
+                            @elseif($i === $currentStage)
+                                {{-- Current (pulsing) --}}
+                                <div class="w-7 h-7 rounded-full {{ $currentStage === 3 ? 'bg-emerald-500' : 'bg-indigo-500' }} flex items-center justify-center text-white text-[10px] shadow-lg {{ $currentStage === 3 ? 'shadow-emerald-500/30' : 'shadow-indigo-500/30' }} animate-pulse">
+                                    @if($currentStage === 3)
+                                        <i class="fa-solid fa-check"></i>
+                                    @else
+                                        <i class="{{ $stage['icon'] }}"></i>
+                                    @endif
+                                </div>
+                            @else
+                                {{-- Upcoming --}}
+                                <div class="w-7 h-7 rounded-full border-2 border-[#2a3d30] bg-[#0A110D] flex items-center justify-center text-[#3a4d40] text-[10px]">
+                                    <i class="{{ $stage['icon'] }}"></i>
+                                </div>
+                            @endif
+
+                            <p class="text-[10px] font-bold mt-1.5 text-center {{ $i <= $currentStage ? 'text-theme-heading' : 'text-[#3a4d40]' }}">{{ $stage['label'] }}</p>
+
+                            {{-- Stage detail --}}
+                            @if($i === 0 && $complaint->filed_at)
+                                <p class="text-[9px] text-theme-text text-center mt-0.5">{{ $complaint->filed_at->format('d M, h:i A') }}</p>
+                            @elseif($i === 1 && $complaint->assignedTo && $currentStage >= 1)
+                                <p class="text-[9px] text-theme-text text-center mt-0.5">{{ $complaint->assignedTo->name }}</p>
+                            @elseif($i === 3 && $complaint->resolved_at && $currentStage >= 3)
+                                <p class="text-[9px] text-emerald-400 text-center mt-0.5">{{ $complaint->resolved_at->format('d M, h:i A') }}</p>
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
+            </div>
+
+            @if($complaint->resolution_remarks && $currentStage >= 3)
+                <div class="mt-3 p-2.5 bg-emerald-500/10 border border-emerald-500/20 rounded-lg">
+                    <p class="text-xs text-emerald-400"><i class="fa-solid fa-message mr-1"></i> {{ $complaint->resolution_remarks }}</p>
+                </div>
+            @endif
         </div>
     @empty
         <div class="text-center py-8">

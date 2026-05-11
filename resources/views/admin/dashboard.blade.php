@@ -1,9 +1,23 @@
 @extends('layouts.app')
 
 @section('content')
-<div class="mb-8">
-    <h2 class="text-3xl font-bold text-theme-heading mb-1">Admin Dashboard</h2>
-    <p class="text-sm text-theme-text">System Overview · Ministry of Power · Agriculture Distribution · {{ now()->format('d M Y') }}</p>
+<div class="mb-8 flex justify-between items-start">
+    <div>
+        <h2 class="text-3xl font-bold text-theme-heading mb-1">Admin Dashboard</h2>
+        <p class="text-sm text-theme-text">System Overview · Ministry of Power · Agriculture Distribution · {{ now()->format('d M Y') }}</p>
+    </div>
+    
+    <div class="relative">
+        <button onclick="document.getElementById('exportDropdown').classList.toggle('hidden')" class="bg-indigo-600 hover:bg-indigo-500 text-white font-medium px-4 py-2 rounded-lg text-sm transition-colors flex items-center gap-2">
+            <i class="fa-solid fa-download"></i> Download Report <i class="fa-solid fa-chevron-down text-[10px]"></i>
+        </button>
+        <div id="exportDropdown" class="hidden absolute right-0 mt-2 w-48 bg-[#121C16] border border-theme-border rounded-lg shadow-xl z-50 overflow-hidden">
+            <a href="{{ route('admin.export', ['type' => 'farmers']) }}" class="block px-4 py-2.5 text-sm text-theme-text hover:bg-theme-border/50 hover:text-white transition-colors"><i class="fa-solid fa-users w-5"></i> Farmer List</a>
+            <a href="{{ route('admin.export', ['type' => 'connections']) }}" class="block px-4 py-2.5 text-sm text-theme-text hover:bg-theme-border/50 hover:text-white transition-colors border-t border-theme-border/50"><i class="fa-solid fa-plug w-5"></i> Connection List</a>
+            <a href="{{ route('admin.export', ['type' => 'bills']) }}" class="block px-4 py-2.5 text-sm text-theme-text hover:bg-theme-border/50 hover:text-white transition-colors border-t border-theme-border/50"><i class="fa-solid fa-file-invoice w-5"></i> Bills (Current Month)</a>
+            <a href="{{ route('admin.export', ['type' => 'payments']) }}" class="block px-4 py-2.5 text-sm text-theme-text hover:bg-theme-border/50 hover:text-white transition-colors border-t border-theme-border/50"><i class="fa-solid fa-credit-card w-5"></i> Payment History</a>
+        </div>
+    </div>
 </div>
 
 <!-- Stats Row -->

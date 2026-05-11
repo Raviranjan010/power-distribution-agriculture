@@ -16,38 +16,54 @@ use App\Models\ConsumerSubsidy;
 use App\Models\Zone;
 use App\Models\AuditLog;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class AdminController extends Controller
 {
     public function dashboard()
     {
-        $totalFarmers = User::where('role', 'farmer')->count();
-        $totalActiveConnections = Connection::where('status', 'active')->count();
-        $pendingComplaints = Complaint::whereNotIn('status', ['resolved', 'closed'])->count();
-        $totalRevenueThisMonth = Bill::where('status', 'paid')
-            ->where('billing_month', now()->month)->where('billing_year', now()->year)->sum('net_payable');
+        $totalFarmers = Cache::remember('stat.total_farmers', 300, fn() => User::where('role', 'farmer')->count());
+        $totalActiveConnections = Cache::remember('stat.active_connections', 300, fn() => Connection::where('status', 'active')->count());
+        $pendingComplaints = Cache::remember('stat.pending_complaints', 300, fn() => Complaint::whereNotIn('status', ['resolved', 'closed'])->count());
+        $totalRevenueThisMonth = Cache::remember('stat.revenue_this_month', 300, fn() => Bill::where('status', 'paid')
+            ->where('billing_month', now()->month)->where('billing_year', now()->year)->sum('net_payable'));
 
-        $revenueLabels = []; $revenueData = []; $connectionLabels = []; $connectionData = [];
-        for ($i = 11; $i >= 0; $i--) {
-            $d = Carbon::now()->subMonths($i);
-            $revenueLabels[] = $d->format('M Y');
-            $revenueData[] = (float) Bill::where('status', 'paid')
-                ->where('billing_month', $d->month)->where('billing_year', $d->year)->sum('net_payable');
-            $connectionLabels[] = $d->format('M Y');
-            $connectionData[] = Connection::whereYear('created_at', $d->year)->whereMonth('created_at', $d->month)->count();
-        }
-
-        $zones = Zone::with('sdo')->get()->map(function ($z) {
-            return [
-                'name' => $z->name, 'district' => $z->district, 'sdo' => $z->sdo?->name ?? 'Unassigned',
-                'farmers' => User::where('zone_id', $z->id)->where('role', 'farmer')->count(),
-                'connections' => Connection::whereHas('consumer', fn($q) => $q->where('zone_id', $z->id))->where('status', 'active')->count(),
-            ];
+        $chartData = Cache::remember('stat.admin_charts', 300, function() {
+            $revenueLabels = []; $revenueData = []; $connectionLabels = []; $connectionData = [];
+            for ($i = 11; $i >= 0; $i--) {
+                $d = Carbon::now()->subMonths($i);
+                $revenueLabels[] = $d->format('M Y');
+                $revenueData[] = (float) Bill::where('status', 'paid')
+                    ->where('billing_month', $d->month)->where('billing_year', $d->year)->sum('net_payable');
+                $connectionLabels[] = $d->format('M Y');
+                $connectionData[] = Connection::whereYear('created_at', $d->year)->whereMonth('created_at', $d->month)->count();
+            }
+            return compact('revenueLabels', 'revenueData', 'connectionLabels', 'connectionData');
         });
 
-        $total = Complaint::count();
-        $resolved = Complaint::whereIn('status', ['resolved', 'closed'])->count();
-        $resolutionRate = $total > 0 ? round(($resolved / $total) * 100, 1) : 0;
+        $revenueLabels = $chartData['revenueLabels'];
+        $revenueData = $chartData['revenueData'];
+        $connectionLabels = $chartData['connectionLabels'];
+        $connectionData = $chartData['connectionData'];
+
+        $zones = Cache::remember('stat.zones_overview', 300, function() {
+            return Zone::with('sdo')->get()->map(function ($z) {
+                return [
+                    'name' => $z->name, 'district' => $z->district, 'sdo' => $z->sdo?->name ?? 'Unassigned',
+                    'farmers' => User::where('zone_id', $z->id)->where('role', 'farmer')->count(),
+                    'connections' => Connection::whereHas('consumer', fn($q) => $q->where('zone_id', $z->id))->where('status', 'active')->count(),
+                ];
+            });
+        });
+
+        $complaintStats = Cache::remember('stat.complaint_resolution', 300, function() {
+            $total = Complaint::count();
+            $resolved = Complaint::whereIn('status', ['resolved', 'closed'])->count();
+            return [
+                'resolutionRate' => $total > 0 ? round(($resolved / $total) * 100, 1) : 0
+            ];
+        });
+        $resolutionRate = $complaintStats['resolutionRate'];
 
         return view('admin.dashboard', compact(
             'totalFarmers', 'totalActiveConnections', 'pendingComplaints', 'totalRevenueThisMonth',
@@ -151,5 +167,63 @@ class AdminController extends Controller
     {
         $logs = AuditLog::with('user')->orderByDesc('created_at')->paginate(20);
         return view('admin.audit_logs', compact('logs'));
+    }
+
+    public function exportReport(Request $request)
+    {
+        $type = $request->query('type');
+        $data = [];
+        $headers = [];
+
+        if ($type === 'farmers') {
+            $data = User::where('role', 'farmer')->get(['name', 'email', 'phone', 'village', 'district', 'farmer_id_number']);
+            $headers = ['Name', 'Email', 'Phone', 'Village', 'District', 'Farmer ID'];
+        } elseif ($type === 'connections') {
+            $data = Connection::with('consumer')->get()->map(function($c) {
+                return [
+                    'connection_number' => $c->connection_number,
+                    'farmer_name' => $c->consumer->name ?? '',
+                    'type' => $c->connection_type,
+                    'load' => $c->sanctioned_load_kw,
+                    'status' => $c->status,
+                ];
+            });
+            $headers = ['Connection Number', 'Farmer Name', 'Type', 'Load (kW)', 'Status'];
+        } elseif ($type === 'bills') {
+            $cm = now()->month;
+            $cy = now()->year;
+            $data = Bill::with('connection.consumer')->where('billing_month', $cm)->where('billing_year', $cy)->get()->map(function($b) {
+                return [
+                    'bill_number' => $b->bill_number,
+                    'farmer_name' => $b->connection->consumer->name ?? '',
+                    'units' => $b->units_consumed,
+                    'amount' => $b->net_payable,
+                    'status' => $b->status,
+                ];
+            });
+            $headers = ['Bill Number', 'Farmer Name', 'Units', 'Amount', 'Status'];
+        } elseif ($type === 'payments') {
+            $data = \App\Models\Payment::with('bill.connection.consumer')->get()->map(function($p) {
+                return [
+                    'transaction_id' => $p->transaction_id,
+                    'farmer_name' => $p->bill->connection->consumer->name ?? '',
+                    'amount' => $p->amount,
+                    'method' => $p->payment_method,
+                    'date' => $p->payment_date,
+                ];
+            });
+            $headers = ['Transaction ID', 'Farmer Name', 'Amount', 'Method', 'Date'];
+        } else {
+            return back()->with('error', 'Invalid report type.');
+        }
+
+        return response()->streamDownload(function() use ($data, $headers) {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, $headers);
+            foreach ($data as $row) {
+                fputcsv($out, is_array($row) ? $row : $row->toArray());
+            }
+            fclose($out);
+        }, 'report-'.$type.'-'.now()->format('Y-m-d').'.csv', ['Content-Type' => 'text/csv']);
     }
 }

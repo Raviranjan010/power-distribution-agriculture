@@ -12,7 +12,7 @@ Route::get('/', function () {
 })->name('home');
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
-Route::post('/login', [AuthController::class, 'login']);
+Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
 Route::post('/register', [AuthController::class, 'register']);
 Route::post('/logout', [AuthController::class, 'logout'])->name('logout');
@@ -27,6 +27,7 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/subsidies', [AdminController::class, 'subsidySchemes'])->name('subsidies');
     Route::post('/subsidies', [AdminController::class, 'storeSubsidyScheme'])->name('subsidies.store');
     Route::get('/audit-logs', [AdminController::class, 'auditLogs'])->name('audit_logs');
+    Route::get('/export', [AdminController::class, 'exportReport'])->name('export');
 });
 
 Route::middleware(['auth', 'role:sdo'])->prefix('officer')->name('officer.')->group(function () {
@@ -39,6 +40,8 @@ Route::middleware(['auth', 'role:sdo'])->prefix('officer')->name('officer.')->gr
     Route::post('/generate-bills', [OfficerController::class, 'generateBills'])->name('generate_bills');
     Route::post('/subsidy/{id}/approve', [OfficerController::class, 'approveSubsidy'])->name('subsidy.approve');
     Route::post('/subsidy/{id}/reject', [OfficerController::class, 'rejectSubsidy'])->name('subsidy.reject');
+    Route::post('/schedule', [OfficerController::class, 'storeSchedule'])->name('schedule.store');
+    Route::delete('/schedule/{id}', [OfficerController::class, 'deleteSchedule'])->name('schedule.delete');
 });
 
 Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->group(function () {
@@ -56,6 +59,8 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::get('/subsidies', [FarmerController::class, 'subsidies'])->name('subsidies');
     Route::post('/subsidy/apply', [FarmerController::class, 'applySubsidy'])->name('subsidy.apply');
     Route::get('/help', [FarmerController::class, 'help'])->name('help');
+    Route::get('/profile', [FarmerController::class, 'profile'])->name('profile');
+    Route::post('/profile', [FarmerController::class, 'updateProfile'])->name('profile.update');
 });
 
 Route::middleware(['auth', 'role:lineman'])->prefix('lineman')->name('lineman.')->group(function () {

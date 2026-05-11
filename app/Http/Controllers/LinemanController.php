@@ -31,7 +31,9 @@ class LinemanController extends Controller
             'remarks' => 'nullable|string'
         ]);
 
-        $connection = Connection::findOrFail($request->connection_id);
+        $connection = Connection::where('id', $request->connection_id)
+            ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
+            ->firstOrFail();
         
         $lastReading = MeterReading::where('connection_id', $connection->id)
             ->orderBy('reading_date', 'desc')

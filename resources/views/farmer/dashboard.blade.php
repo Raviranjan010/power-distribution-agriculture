@@ -16,6 +16,28 @@
         </p>
     </div>
 
+    {{-- Power Schedule Banner --}}
+    @if(isset($schedules) && $schedules->count() > 0)
+        @php $todaySchedules = $schedules->filter(fn($s) => \Carbon\Carbon::parse($s->scheduled_date)->isToday()); @endphp
+        @if($todaySchedules->count() > 0)
+            <div class="mb-8 bg-amber-500/10 border border-amber-500/50 rounded-lg p-4 flex items-start gap-4">
+                <div class="text-amber-500 text-2xl mt-1"><i class="fa-solid fa-triangle-exclamation"></i></div>
+                <div>
+                    <h4 class="text-amber-500 font-bold text-sm">Scheduled Power Outage Today</h4>
+                    @foreach($todaySchedules as $schedule)
+                        <p class="text-sm text-theme-heading mt-1">
+                            <strong>{{ $schedule->title }}</strong>: 
+                            {{ \Carbon\Carbon::parse($schedule->from_time)->format('h:i A') }} to {{ \Carbon\Carbon::parse($schedule->to_time)->format('h:i A') }}
+                        </p>
+                        @if($schedule->reason)
+                            <p class="text-xs text-theme-text mt-0.5">{{ $schedule->reason }}</p>
+                        @endif
+                    @endforeach
+                </div>
+            </div>
+        @endif
+    @endif
+
     {{-- Stat Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {{-- Active Connections --}}

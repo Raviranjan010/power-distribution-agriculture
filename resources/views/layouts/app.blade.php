@@ -161,6 +161,12 @@
                             </a>
                         </li>
                         <li>
+                            <a href="{{ route('farmer.profile') }}"
+                                class="sidebar-link {{ request()->routeIs('farmer.profile') ? 'active' : '' }}">
+                                <i class="fa-solid fa-user w-4"></i> Profile
+                            </a>
+                        </li>
+                        <li>
                             <a href="{{ route('farmer.help') }}"
                                 class="sidebar-link {{ request()->routeIs('farmer.help') ? 'active' : '' }}">
                                 <i class="fa-regular fa-circle-question w-4"></i> Help
@@ -258,10 +264,13 @@
                 </div>
 
                 <div class="flex items-center gap-3 pl-4 border-l border-theme-border">
-                    <div
-                        class="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 flex items-center justify-center text-xs font-bold uppercase">
-                        {{ substr(Auth::user()->name, 0, 2) }}
-                    </div>
+                    @if(Auth::user()->avatar)
+                        <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover border border-emerald-500/30">
+                    @else
+                        <div class="w-8 h-8 rounded-full bg-emerald-500/20 border border-emerald-500/30 text-emerald-500 flex items-center justify-center text-xs font-bold uppercase">
+                            {{ substr(Auth::user()->name, 0, 2) }}
+                        </div>
+                    @endif
                     <div class="text-sm">
                         <p class="font-medium text-theme-heading leading-tight">{{ Auth::user()->name }}</p>
                         <p class="text-[10px] text-theme-text uppercase tracking-wider">{{ Auth::user()->role }}

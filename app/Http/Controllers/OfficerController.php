@@ -12,7 +12,12 @@ use App\Models\Bill;
 use App\Models\ConsumerSubsidy;
 use App\Models\TariffCategory;
 use App\Models\Zone;
+use App\Models\PowerSchedule;
 use Carbon\Carbon;
+use Illuminate\Support\Facades\Mail;
+use App\Mail\BillGenerated;
+use App\Mail\ConnectionApproved;
+use App\Mail\ComplaintResolved;
 
 class OfficerController extends Controller
 {
@@ -43,26 +48,34 @@ class OfficerController extends Controller
             ->whereHas('consumer', fn($q) => $q->where('zone_id', $user->zone_id))
             ->with(['consumer', 'scheme'])->get();
 
+        $schedules = PowerSchedule::where('zone_id', $user->zone_id)->orderBy('scheduled_date', 'desc')->get();
+
         return view('officer.dashboard', compact(
             'zone', 'pendingConnections', 'complaintsByStatus', 'pendingReadings',
-            'monthlyRevenue', 'linemen', 'tariffCategories', 'complaints', 'pendingSubsidies'
+            'monthlyRevenue', 'linemen', 'tariffCategories', 'complaints', 'pendingSubsidies', 'schedules'
         ));
     }
 
     public function approveConnection(Request $request, $id)
     {
         $request->validate(['tariff_category_id' => 'required|exists:tariff_categories,id']);
-        $conn = Connection::findOrFail($id);
+        $conn = Connection::where('id', $id)
+            ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
+            ->firstOrFail();
         $conn->update([
             'tariff_category_id' => $request->tariff_category_id, 'meter_number' => 'MT-' . rand(10000, 99999),
             'status' => 'active', 'installation_date' => now(), 'sdo_id' => Auth::id(),
         ]);
+        $conn->load('consumer', 'tariffCategory');
+        Mail::to($conn->consumer->email)->send(new ConnectionApproved($conn));
         return back()->with('success', 'Connection ' . $conn->connection_number . ' approved!');
     }
 
     public function rejectConnection($id)
     {
-        $conn = Connection::findOrFail($id);
+        $conn = Connection::where('id', $id)
+            ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
+            ->firstOrFail();
         $conn->update(['status' => 'disconnected']);
         return back()->with('success', 'Connection ' . $conn->connection_number . ' rejected.');
     }
@@ -70,21 +83,30 @@ class OfficerController extends Controller
     public function assignComplaint(Request $request, $id)
     {
         $request->validate(['assigned_to' => 'required|exists:users,id']);
-        $c = Complaint::findOrFail($id);
+        $c = Complaint::where('id', $id)
+            ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
+            ->firstOrFail();
         $c->update(['assigned_to' => $request->assigned_to, 'assigned_by' => Auth::id(), 'status' => 'assigned']);
         return back()->with('success', 'Complaint ' . $c->grv_number . ' assigned!');
     }
 
     public function resolveComplaint(Request $request, $id)
     {
-        $c = Complaint::findOrFail($id);
+        $c = Complaint::where('id', $id)
+            ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
+            ->firstOrFail();
         $c->update(['status' => 'resolved', 'resolution_remarks' => $request->input('resolution_remarks', 'Resolved by SDO.'), 'resolved_at' => now()]);
+        $c->load('consumer');
+        Mail::to($c->consumer->email)->send(new ComplaintResolved($c));
         return back()->with('success', 'Complaint resolved.');
     }
 
     public function verifyReading($id)
     {
-        MeterReading::findOrFail($id)->update(['is_verified' => true]);
+        MeterReading::where('id', $id)
+            ->whereHas('connection.consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
+            ->firstOrFail()
+            ->update(['is_verified' => true]);
         return back()->with('success', 'Meter reading verified.');
     }
 
@@ -107,7 +129,7 @@ class OfficerController extends Controller
             $fc = $conn->sanctioned_load_kw * $t->fixed_charge_per_kw;
             $tax = ($ec + $fc) * 0.05;
 
-            Bill::create([
+            $bill = Bill::create([
                 'bill_number' => 'BILL-' . now()->format('Ym') . '-C' . $conn->id . '-' . $reading->id,
                 'connection_id' => $conn->id, 'meter_reading_id' => $reading->id,
                 'billing_month' => $cm, 'billing_year' => $cy, 'units_consumed' => $reading->units_consumed,
@@ -116,6 +138,8 @@ class OfficerController extends Controller
                 'due_date' => Carbon::create($cy, $cm)->endOfMonth()->addDays(15),
                 'status' => 'pending', 'generated_by' => Auth::id(),
             ]);
+            $bill->load('connection.consumer');
+            Mail::to($conn->consumer->email ?? $bill->connection->consumer->email)->send(new BillGenerated($bill));
             $count++;
         }
         return back()->with('success', $count . ' bills generated.');
@@ -123,16 +147,54 @@ class OfficerController extends Controller
 
     public function approveSubsidy($id)
     {
-        ConsumerSubsidy::findOrFail($id)->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
+        ConsumerSubsidy::where('id', $id)
+            ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
+            ->firstOrFail()
+            ->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
         return back()->with('success', 'Subsidy approved!');
     }
 
     public function rejectSubsidy(Request $request, $id)
     {
-        ConsumerSubsidy::findOrFail($id)->update([
+        ConsumerSubsidy::where('id', $id)
+            ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
+            ->firstOrFail()
+            ->update([
             'status' => 'rejected', 'approved_by' => Auth::id(), 'approved_at' => now(),
             'remarks' => $request->input('remarks', 'Rejected by SDO.'),
         ]);
         return back()->with('success', 'Subsidy rejected.');
+    }
+
+    public function storeSchedule(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'description' => 'nullable|string',
+            'scheduled_date' => 'required|date',
+            'from_time' => 'required|date_format:H:i',
+            'to_time' => 'required|date_format:H:i|after:from_time',
+            'reason' => 'nullable|string|max:255',
+        ]);
+
+        PowerSchedule::create([
+            'zone_id' => Auth::user()->zone_id,
+            'title' => $request->title,
+            'description' => $request->description,
+            'scheduled_date' => $request->scheduled_date,
+            'from_time' => $request->from_time,
+            'to_time' => $request->to_time,
+            'reason' => $request->reason,
+            'posted_by' => Auth::id(),
+        ]);
+
+        return back()->with('success', 'Power schedule posted successfully.');
+    }
+
+    public function deleteSchedule($id)
+    {
+        $schedule = PowerSchedule::where('id', $id)->where('zone_id', Auth::user()->zone_id)->firstOrFail();
+        $schedule->delete();
+        return back()->with('success', 'Power schedule deleted.');
     }
 }
