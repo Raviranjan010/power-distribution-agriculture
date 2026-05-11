@@ -29,5 +29,5 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 EXPOSE 80
 
-# This command now runs the migration automatically before starting the server
-CMD service nginx start && php artisan migrate --force && php-fpm
+# Using migrate:fresh --seed to clean the database and add demo accounts
+CMD service nginx start && php artisan migrate:fresh --seed --force && php-fpm
