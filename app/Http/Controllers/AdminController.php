@@ -58,7 +58,8 @@ class AdminController extends Controller
     public function users()
     {
         $users = User::orderByDesc('created_at')->paginate(20);
-        return view('admin.users', compact('users'));
+        $zones = Zone::all();
+        return view('admin.users', compact('users', 'zones'));
     }
 
     public function toggleUserStatus($id)
@@ -70,6 +71,39 @@ class AdminController extends Controller
             'model_type' => 'User', 'model_id' => $user->id, 'ip_address' => request()->ip(),
         ]);
         return back()->with('success', 'User ' . $user->name . ' ' . ($user->is_active ? 'activated' : 'deactivated'));
+    }
+
+    public function storeUser(Request $request)
+    {
+        $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users',
+            'password' => 'required|min:6',
+            'role' => 'required|in:sdo,lineman,admin',
+            'zone_id' => 'required_if:role,sdo,lineman|nullable|exists:zones,id',
+            'phone' => 'required|string|max:15',
+        ]);
+
+        $user = User::create([
+            'name' => $request->name,
+            'email' => $request->email,
+            'password' => \Illuminate\Support\Facades\Hash::make($request->password),
+            'role' => $request->role,
+            'zone_id' => $request->zone_id,
+            'phone' => $request->phone,
+            'is_active' => true,
+        ]);
+
+        AuditLog::create([
+            'user_id' => Auth::id(),
+            'action' => 'created_user',
+            'model_type' => 'User',
+            'model_id' => $user->id,
+            'new_values' => ['name' => $user->name, 'role' => $user->role, 'email' => $user->email],
+            'ip_address' => request()->ip(),
+        ]);
+
+        return back()->with('success', 'User ' . $user->name . ' created successfully.');
     }
 
     public function tariffs()
