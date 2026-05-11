@@ -29,4 +29,5 @@ RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
 
 EXPOSE 80
 
-CMD service nginx start && php-fpm
+# This command now runs the migration automatically before starting the server
+CMD service nginx start && php artisan migrate --force && php-fpm
