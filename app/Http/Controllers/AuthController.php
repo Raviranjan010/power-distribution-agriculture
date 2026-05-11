@@ -60,7 +60,7 @@ class AuthController extends Controller
             'phone' => 'required|digits:10',
             'aadhar_number' => 'required|digits:12',
             'village' => 'required|string',
-            'district' => 'required|exists:zones,district',
+            'district' => 'required|string',
             'state' => 'required|string',
             'address' => 'required|string',
         ]);
