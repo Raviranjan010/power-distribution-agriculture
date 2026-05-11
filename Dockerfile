@@ -2,7 +2,9 @@ FROM php:8.2-fpm
 
 # Install system dependencies
 RUN apt-get update && apt-get install -y \
-    git curl libpng-dev libonig-dev libxml2-dev zip unzip nginx nodejs npm
+    git curl libpng-dev libonig-dev libxml2-dev zip unzip \
+    nginx nodejs npm gettext-base \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd
@@ -16,18 +18,26 @@ WORKDIR /var/www
 # Copy project files
 COPY . .
 
-# Install dependencies
-RUN composer install --no-dev --optimize-autoloader
+# Install PHP dependencies (production only)
+RUN composer install --no-dev --optimize-autoloader --no-interaction
+
+# Install Node dependencies and build frontend assets
 RUN npm install && npm run build
 
-# Setup Nginx
-COPY docker/nginx.conf /etc/nginx/sites-available/default
-RUN ln -sf /etc/nginx/sites-available/default /etc/nginx/sites-enabled/default
+# Setup Nginx — store as template for PORT substitution at runtime
+COPY docker/nginx.conf /etc/nginx/sites-available/default.template
+RUN rm -f /etc/nginx/sites-enabled/default
 
-# Permissions
+# Copy startup script and make it executable
+COPY docker/start.sh /usr/local/bin/start.sh
+RUN chmod +x /usr/local/bin/start.sh
+
+# Set permissions
 RUN chown -R www-data:www-data /var/www/storage /var/www/bootstrap/cache
+RUN chmod -R 775 /var/www/storage /var/www/bootstrap/cache
 
-EXPOSE 80
+# Render uses the PORT env variable
+EXPOSE 10000
 
-# Using migrate:fresh --seed to clean the database and add demo accounts
-CMD service nginx start && php artisan migrate:fresh --seed --force && php-fpm
+# Start the application via the startup script
+CMD ["/usr/local/bin/start.sh"]
