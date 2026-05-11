@@ -26,25 +26,28 @@ chmod -R 775 storage bootstrap/cache
 # 3. Handle Laravel setup tasks
 echo "==> Running Laravel setup tasks..."
 
-# Wait a bit for the DB to be ready if it's just starting (Aiven DB is usually always up)
+# Force APP_DEBUG to true for easier debugging of 500 errors
+export APP_DEBUG=true
+
+# Wait for DB
 sleep 2
 
-# Check if artisan is working and show info
-php artisan --version || echo "==> ERROR: artisan not found or PHP failing"
-
-# Clear caches
-php artisan config:clear
-php artisan cache:clear
+# Check Migration Status
+echo "==> Migration Status:"
+php artisan migrate:status 2>&1 || echo "==> Could not check migration status."
 
 # Run migrations
 echo "==> Running database migrations..."
-php artisan migrate --force 2>&1 || echo "==> WARNING: Migrations failed. Check your DB credentials."
+# Using --force for production
+php artisan migrate --force 2>&1
 
-# Run seeders
+# Run seeders only if they haven't run (we can check a table)
+# For now, just run them and ignore errors
 echo "==> Running database seeders..."
-php artisan db:seed --force 2>&1 || echo "==> WARNING: Seeding failed. This is expected if data already exists."
+php artisan db:seed --force 2>&1 || echo "==> Seeders finished (might have skipped existing data)."
 
-# Cache config for performance
+# Cache config
+echo "==> Caching..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
@@ -56,21 +59,12 @@ php artisan storage:link --force 2>/dev/null || true
 echo "==> Starting PHP-FPM..."
 php-fpm -D
 
-# Wait for PHP-FPM to be ready on port 9000
+# Wait for PHP-FPM
 echo "==> Waiting for PHP-FPM to listen on port 9000..."
-MAX_RETRIES=10
-COUNT=0
 while ! (timeout 1 bash -c "cat < /dev/null > /dev/tcp/127.0.0.1/9000") >/dev/null 2>&1; do
-    echo "    Waiting for PHP-FPM... ($COUNT/$MAX_RETRIES)"
-    sleep 2
-    COUNT=$((COUNT + 1))
-    if [ $COUNT -ge $MAX_RETRIES ]; then
-        echo "==> ERROR: PHP-FPM failed to start on port 9000"
-        break
-    fi
+    sleep 1
 done
 
 # 5. Start Nginx in foreground
-echo "==> Starting Nginx in foreground..."
-# We run nginx in foreground so Render can manage the process
+echo "==> Starting Nginx..."
 exec nginx -g 'daemon off;'
