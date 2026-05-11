@@ -1,66 +1,200 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# ⚡ Distribution of Electric Power for Agriculture
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+### Ministry of Power Portal — Punjab State Electricity Board
 
-## About Laravel
+A comprehensive web portal for managing agricultural electricity distribution across Punjab. The system digitises connection management, metering, billing, complaint resolution, and subsidy administration — connecting farmers, field linemen, SDO officers, and administrators on a single platform.
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## 🛠️ Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Layer        | Technology                                      |
+|-------------|--------------------------------------------------|
+| Backend      | Laravel 10 · PHP 8.1                            |
+| Database     | MySQL 8                                          |
+| Frontend     | Blade Templates · Tailwind CSS                  |
+| Charts       | Chart.js                                         |
+| Payments     | Razorpay SDK (production) · Simulated (dev)     |
+| Icons        | Font Awesome 6                                   |
+| Auth         | Laravel built-in (session-based, role middleware)|
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
+## 👥 User Roles & Capabilities
 
-You may also try the [Laravel Bootcamp](https://bootcamp.laravel.com), where you will be guided through building a modern Laravel application from scratch.
+### 🔴 Admin
+- View system-wide dashboard with revenue charts, zone stats, complaint resolution rates
+- Create and manage users (SDO, Lineman, Admin)
+- Activate / deactivate any user account
+- Configure tariff categories and rates
+- Create and manage government subsidy schemes
+- View full audit logs of all system actions
 
-If you don't feel like reading, [Laracasts](https://laracasts.com) can help. Laracasts contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
+### 🔵 SDO (Sub-Divisional Officer)
+- View zone-level dashboard with pending connections, open complaints, pending readings
+- Approve or reject new farmer connection requests with tariff assignment
+- Verify meter readings submitted by linemen
+- Generate monthly bills for the entire zone
+- Assign complaints to field linemen
+- Approve or reject farmer subsidy applications
 
-## Laravel Sponsors
+### 🟡 Lineman
+- View assigned complaints and update their status (in progress / resolved)
+- Submit meter readings for active connections in their zone
+- Track monthly reading submissions
 
-We would like to extend our thanks to the following sponsors for funding Laravel development. If you are interested in becoming a sponsor, please visit the [Laravel Partners program](https://partners.laravel.com).
+### 🟢 Farmer
+- Register with Aadhaar verification and zone-linked district selection
+- Apply for new electricity connections (tubewell, irrigation motor, thresher, drip)
+- View connection status, tariff details, and meter reading history
+- View and pay electricity bills (with payment confirmation flow)
+- Track 12-month electricity usage with interactive charts
+- File grievance complaints with priority levels
+- Apply for government subsidy schemes
+- Access help and support resources
 
-### Premium Partners
+---
 
-- **[Vehikl](https://vehikl.com/)**
-- **[Tighten Co.](https://tighten.co)**
-- **[WebReinvent](https://webreinvent.com/)**
-- **[Kirschbaum Development Group](https://kirschbaumdevelopment.com)**
-- **[64 Robots](https://64robots.com)**
-- **[Curotec](https://www.curotec.com/services/technologies/laravel/)**
-- **[Cyber-Duck](https://cyber-duck.co.uk)**
-- **[DevSquad](https://devsquad.com/hire-laravel-developers)**
-- **[Jump24](https://jump24.co.uk)**
-- **[Redberry](https://redberry.international/laravel/)**
-- **[Active Logic](https://activelogic.com)**
-- **[byte5](https://byte5.de)**
-- **[OP.GG](https://op.gg)**
+## 🚀 Setup Instructions
 
-## Contributing
+### Prerequisites
+- PHP 8.1+
+- Composer
+- MySQL 8
+- Node.js & npm (for asset compilation, if needed)
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+### Installation
 
-## Code of Conduct
+```bash
+# 1. Clone the repository
+git clone https://github.com/Raviranjan010/power-distribution-agriculture.git
+cd power-distribution-agriculture
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+# 2. Install PHP dependencies
+composer install
 
-## Security Vulnerabilities
+# 3. Create environment file
+cp .env.example .env
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# 4. Generate application key
+php artisan key:generate
 
-## License
+# 5. Configure your database in .env
+# DB_DATABASE=power_distribution
+# DB_USERNAME=root
+# DB_PASSWORD=your_password
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+# 6. Run migrations
+php artisan migrate
+
+# 7. Seed the database with demo data
+php artisan db:seed
+
+# 8. Start the development server
+php artisan serve
+```
+
+The application will be available at `http://localhost:8000`
+
+### Razorpay (Optional — Production)
+
+To enable real payment processing, add your Razorpay credentials to `.env`:
+
+```env
+RAZORPAY_KEY=rzp_live_xxxxxxxxxxxxxxx
+RAZORPAY_SECRET=your_razorpay_secret
+```
+
+If these keys are not set, the system falls back to a simulated payment flow.
+
+---
+
+## 🔐 Default Login Credentials
+
+All seeded accounts use the password: **`password`**
+
+| Role     | Email                              | Description           |
+|---------|-------------------------------------|-----------------------|
+| Admin    | `admin@punjabpower.gov.in`         | Super Administrator   |
+| SDO      | `sdo.1@punjabpower.gov.in`         | SDO — Zone 1          |
+| SDO      | `sdo.2@punjabpower.gov.in`         | SDO — Zone 2          |
+| Lineman  | `lineman.1@punjabpower.gov.in`     | Lineman — Zone 1      |
+| Lineman  | `lineman.2@punjabpower.gov.in`     | Lineman — Zone 2      |
+| Farmer   | `harjit.singh@gmail.com`           | Farmer — Nawanshahr   |
+| Farmer   | `gurpreet.kaur@gmail.com`          | Farmer — Nawanshahr   |
+| Farmer   | `manjit.singh@gmail.com`           | Farmer — Phagwara     |
+| Farmer   | `balwinder.singh@gmail.com`        | Farmer — Hoshiarpur   |
+| Farmer   | `surinder.singh@gmail.com`         | Farmer — Jalandhar    |
+
+---
+
+## ✨ Features
+
+- **Multi-role Authentication** — Role-based access control with middleware protection
+- **Connection Lifecycle** — Request → SDO Approval → Tariff Assignment → Active
+- **Metering Pipeline** — Lineman Reading → SDO Verification → Bill Generation
+- **Billing & Payments** — Auto-generated bills with payment confirmation flow and Razorpay integration
+- **Complaint Management** — File → Assign to Lineman → In Progress → Resolved
+- **Subsidy Administration** — Government schemes with farmer applications and SDO approval
+- **Interactive Dashboards** — Real-time charts and KPIs for every role
+- **Audit Trail** — Complete logging of administrative actions
+- **Zone-based Architecture** — Data isolation and management by geographic zones
+- **Responsive Design** — Dark-themed UI optimised for desktop and mobile
+- **Farmer ID System** — Auto-generated unique IDs (KV-YYYY-XXXX format)
+- **GRV Tracking** — Unique grievance numbers for complaint tracking
+
+---
+
+## 📸 Screenshots
+
+<!-- Add screenshots here -->
+
+| Dashboard | Description |
+|-----------|-------------|
+| ![Admin Dashboard](screenshots/admin-dashboard.png) | Admin overview with revenue charts and zone statistics |
+| ![Farmer Dashboard](screenshots/farmer-dashboard.png) | Farmer portal with usage graphs and quick actions |
+| ![Officer Dashboard](screenshots/officer-dashboard.png) | SDO panel with pending approvals and complaints |
+| ![Bill Payment](screenshots/bill-payment.png) | Payment confirmation flow with bill details |
+
+> 📌 *Create a `screenshots/` directory and add your screenshots to display them here.*
+
+---
+
+## 📁 Project Structure
+
+```
+├── app/Http/Controllers/
+│   ├── AdminController.php       # Admin dashboard, users, tariffs, subsidies
+│   ├── AuthController.php        # Login, register, logout
+│   ├── FarmerController.php      # Farmer dashboard, bills, complaints, usage
+│   ├── LinemanController.php     # Lineman dashboard, readings, complaints
+│   └── OfficerController.php     # SDO dashboard, approvals, bill generation
+├── app/Models/                   # Eloquent models (User, Connection, Bill, etc.)
+├── database/
+│   ├── migrations/               # Schema definitions
+│   └── seeders/                  # Demo data seeders
+├── resources/views/
+│   ├── admin/                    # Admin panel views
+│   ├── auth/                     # Login and registration
+│   ├── farmer/                   # Farmer portal views
+│   ├── lineman/                  # Lineman panel views
+│   ├── officer/                  # SDO panel views
+│   └── layouts/                  # Base layout template
+└── routes/web.php                # All application routes
+```
+
+---
+
+## 👤 Author
+
+**Ravi Ranjan**
+<!-- Update with your college name below -->
+*[Your College Name Here]*
+
+GitHub: [@Raviranjan010](https://github.com/Raviranjan010)
+
+---
+
+## 📄 License
+
+This project is built for academic purposes under the Ministry of Power domain.
