@@ -28,6 +28,45 @@ Route::get('/health', function () {
     return response()->json($results);
 });
 
+Route::get('/health/db-fix', function () {
+    $output = "";
+    try {
+        // Manually ensure the state column exists in zones table
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('zones', 'state')) {
+            \Illuminate\Support\Facades\Schema::table('zones', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('state')->default('Rajasthan')->after('name');
+            });
+            $output .= "Added 'state' column to 'zones' table.\n";
+        } else {
+            $output .= "'state' column already exists in 'zones' table.\n";
+        }
+
+        // Manually ensure avatar column exists in users table
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'avatar')) {
+            \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('avatar')->nullable()->after('password');
+            });
+            $output .= "Added 'avatar' column to 'users' table.\n";
+        }
+        
+        // Manually ensure document_path column exists in consumer_subsidies table
+        if (!\Illuminate\Support\Facades\Schema::hasColumn('consumer_subsidies', 'document_path')) {
+            \Illuminate\Support\Facades\Schema::table('consumer_subsidies', function (\Illuminate\Database\Schema\Blueprint $table) {
+                $table->string('document_path')->nullable();
+            });
+            $output .= "Added 'document_path' column to 'consumer_subsidies' table.\n";
+        }
+
+        // Run migrations
+        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
+        $output .= \Illuminate\Support\Facades\Artisan::output();
+        
+        return "<pre>DB Fix run successfully.\nOutput:\n" . htmlspecialchars($output) . "</pre>";
+    } catch (\Exception $e) {
+        return "<pre>DB Fix encountered an error.\nError:\n" . htmlspecialchars($e->getMessage()) . "\n\nPartial Output:\n" . htmlspecialchars($output) . "</pre>";
+    }
+});
+
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
 Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:5,1');
 Route::get('/register', [AuthController::class, 'showRegister'])->name('register');
