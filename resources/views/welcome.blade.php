@@ -963,7 +963,7 @@
 
     <footer id="contact">
         <div class="page-shell footer-inner">
-            <span>© {{ date('Y') }} Ministry of Power & Agriculture. All rights reserved.</span>
+            <span>&copy; {{ date('Y') }} Ministry of Power & Agriculture. All rights reserved.</span>
             <span>Distribution of Electric Power for Agriculture</span>
         </div>
     </footer>

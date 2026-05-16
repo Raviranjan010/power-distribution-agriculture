@@ -67,7 +67,7 @@
                 @endphp
                 @foreach($cu['monthly'] as $m)
                     <div class="flex-1 flex flex-col items-center gap-1">
-                        <div class="w-full rounded-t" style="height: {{ ($m['units'] / $maxVal) * 48 }}px; background-color: {{ $loop->last ? '#10b981' : '#1F2F24' }};"></div>
+                        <div class="w-full rounded-t" style="height: {{ ($m['units'] / $maxVal) * 48 }}px; background-color: {{ $loop->last ? '#234817' : 'rgba(35, 72, 23, 0.18)' }};"></div>
                         <span class="text-[9px] text-theme-text">{{ $m['month'] }}</span>
                     </div>
                 @endforeach
@@ -91,14 +91,14 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 label: 'Units Consumed (kWh)',
                 data: @json($data),
-                borderColor: '#10b981',
-                backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                borderColor: '#234817',
+                backgroundColor: 'rgba(216, 189, 120, 0.20)',
                 fill: true,
                 tension: 0.4,
                 borderWidth: 2,
                 pointRadius: 4,
-                pointBackgroundColor: '#10b981',
-                pointBorderColor: '#121C16',
+                pointBackgroundColor: '#234817',
+                pointBorderColor: '#fffdf6',
                 pointBorderWidth: 2,
                 pointHoverRadius: 6,
             }]
@@ -109,11 +109,11 @@ document.addEventListener('DOMContentLoaded', function() {
             plugins: {
                 legend: { display: false },
                 tooltip: {
-                    backgroundColor: '#121C16',
-                    borderColor: '#1F2F24',
+                    backgroundColor: '#fffdf6',
+                    borderColor: '#d8ccad',
                     borderWidth: 1,
-                    titleColor: '#E5EDE8',
-                    bodyColor: '#9AA8A0',
+                    titleColor: '#1e241d',
+                    bodyColor: '#667060',
                     padding: 12,
                     displayColors: false,
                     callbacks: {
@@ -123,12 +123,12 @@ document.addEventListener('DOMContentLoaded', function() {
             },
             scales: {
                 x: {
-                    grid: { color: '#1F2F24', drawBorder: false },
-                    ticks: { color: '#9AA8A0', font: { size: 10 }, maxRotation: 45 }
+                    grid: { color: 'rgba(35, 72, 23, 0.10)', drawBorder: false },
+                    ticks: { color: '#667060', font: { size: 10 }, maxRotation: 45 }
                 },
                 y: {
-                    grid: { color: '#1F2F24', drawBorder: false },
-                    ticks: { color: '#9AA8A0', font: { size: 10 }, callback: function(v) { return v.toLocaleString(); } },
+                    grid: { color: 'rgba(35, 72, 23, 0.10)', drawBorder: false },
+                    ticks: { color: '#667060', font: { size: 10 }, callback: function(v) { return v.toLocaleString(); } },
                     beginAtZero: true
                 }
             }

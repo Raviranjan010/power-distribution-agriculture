@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="en" class="dark">
+<html lang="en">
 
 <head>
     <meta charset="UTF-8">
@@ -9,20 +9,77 @@
     @vite(['resources/css/app.css', 'resources/js/app.js'])
     <!-- Chart.js CDN -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <!-- FontAwesome -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Libre+Baskerville:wght@400;700&display=swap');
+
+        :root {
+            --paper: #f8f4e9;
+            --paper-deep: #eee5d3;
+            --ink: #1e241d;
+            --muted: #667060;
+            --leaf: #234817;
+            --leaf-soft: #4f6f31;
+            --wheat: #d8bd78;
+            --copper: #9a5933;
+            --clay: #b9764e;
+            --line: rgba(47, 59, 39, 0.16);
+            --glass: rgba(255, 253, 246, 0.76);
+            --shadow: 0 24px 70px rgba(56, 48, 33, 0.14);
+        }
 
         body {
             font-family: 'Inter', sans-serif;
-            background-color: #0A110D;
+            color: var(--muted);
+            background:
+                radial-gradient(circle at 16% 0%, rgba(216, 189, 120, 0.25), transparent 29rem),
+                linear-gradient(135deg, rgba(248, 244, 233, 0.96), rgba(238, 229, 211, 0.88));
+            background-color: var(--paper);
+        }
+
+        body::before {
+            content: "";
+            position: fixed;
+            inset: 0;
+            pointer-events: none;
+            opacity: 0.36;
+            background-image:
+                linear-gradient(rgba(35, 72, 23, 0.035) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(35, 72, 23, 0.035) 1px, transparent 1px);
+            background-size: 46px 46px;
+            mask-image: linear-gradient(to bottom, black, transparent 82%);
         }
 
         .utilitarian-card {
-            background-color: #121C16;
-            border: 1px solid #1F2F24;
-            border-radius: 0.75rem;
+            position: relative;
+            overflow: hidden;
+            background: var(--glass);
+            border: 1px solid rgba(255, 255, 255, 0.72);
+            border-radius: 1.5rem;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78), 0 18px 45px rgba(54, 45, 29, 0.12);
+            backdrop-filter: blur(18px) saturate(1.08);
+            -webkit-backdrop-filter: blur(18px) saturate(1.08);
+            transition: transform 180ms ease, box-shadow 180ms ease, border-color 180ms ease;
+        }
+
+        .utilitarian-card:hover {
+            transform: translateY(-3px);
+            border-color: rgba(35, 72, 23, 0.24);
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.82), 0 24px 58px rgba(54, 45, 29, 0.16);
+        }
+
+        .utilitarian-card::after {
+            content: "";
+            position: absolute;
+            width: 96px;
+            height: 96px;
+            right: -34px;
+            top: -34px;
+            border-radius: 999px;
+            background: rgba(216, 189, 120, 0.18);
+            pointer-events: none;
         }
 
         .sidebar-link {
@@ -33,19 +90,82 @@
             border-radius: 0.5rem;
             font-weight: 500;
             font-size: 0.875rem;
-            color: #9AA8A0;
-            transition: all 0.15s ease;
+            color: #5f685b;
+            transition: all 0.18s ease;
         }
 
         .sidebar-link:hover {
-            background-color: #121C16;
-            color: #E5EDE8;
+            background-color: rgba(35, 72, 23, 0.08);
+            color: var(--leaf);
+            transform: translateX(2px);
         }
 
         .sidebar-link.active {
-            background-color: #1F2F24;
-            color: #E5EDE8;
-            border: 1px solid #1F2F24;
+            background-color: rgba(35, 72, 23, 0.11);
+            color: var(--leaf);
+            border: 1px solid rgba(35, 72, 23, 0.16);
+        }
+
+        aside {
+            background: rgba(255, 253, 246, 0.64);
+            box-shadow: 18px 0 55px rgba(64, 54, 35, 0.08);
+            backdrop-filter: blur(22px);
+            -webkit-backdrop-filter: blur(22px);
+        }
+
+        header {
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+
+        main {
+            position: relative;
+            z-index: 1;
+        }
+
+        h1, h2 {
+            font-family: "Libre Baskerville", Georgia, serif;
+            letter-spacing: 0;
+        }
+
+        input,
+        select,
+        textarea {
+            background: rgba(255, 253, 246, 0.88) !important;
+            color: var(--ink) !important;
+            border-color: rgba(35, 72, 23, 0.18) !important;
+            box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.78);
+        }
+
+        input:focus,
+        select:focus,
+        textarea:focus {
+            border-color: var(--leaf) !important;
+            box-shadow: 0 0 0 3px rgba(35, 72, 23, 0.12);
+        }
+
+        [class*="bg-[#121C16]"] {
+            background: rgba(255, 253, 246, 0.86) !important;
+        }
+
+        [class*="bg-[#1F2F24]"] {
+            background: rgba(35, 72, 23, 0.18) !important;
+        }
+
+        [class*="bg-[#0A110D]/80"] {
+            background: rgba(30, 36, 29, 0.48) !important;
+        }
+
+        [class*="bg-[#0A110D]/50"] {
+            background: rgba(238, 229, 211, 0.62) !important;
+        }
+
+        table thead tr {
+            background: rgba(229, 218, 174, 0.24);
+        }
+
+        table tbody tr:hover {
+            background: rgba(35, 72, 23, 0.06) !important;
         }
 
         /* Custom pagination styling */
@@ -66,26 +186,62 @@
             border-radius: 0.375rem;
             font-size: 0.75rem;
             font-weight: 500;
-            color: #9AA8A0;
-            background: #121C16;
-            border: 1px solid #1F2F24;
+            color: var(--muted);
+            background: rgba(255, 253, 246, 0.72);
+            border: 1px solid rgba(35, 72, 23, 0.14);
             transition: all 0.15s;
         }
 
         .pagination .page-item .page-link:hover {
-            background: #1F2F24;
-            color: #E5EDE8;
+            background: rgba(35, 72, 23, 0.10);
+            color: var(--leaf);
         }
 
         .pagination .page-item.active .page-link {
-            background: #15803d;
+            background: var(--leaf);
             color: white;
-            border-color: #15803d;
+            border-color: var(--leaf);
         }
 
         .pagination .page-item.disabled .page-link {
             opacity: 0.4;
             pointer-events: none;
+        }
+
+        @media (max-width: 900px) {
+            body {
+                flex-direction: column;
+            }
+
+            aside {
+                width: 100% !important;
+                height: auto !important;
+                position: relative !important;
+                border-right: 0 !important;
+                border-bottom: 1px solid var(--line);
+                padding-top: 1rem !important;
+            }
+
+            aside .overflow-y-auto {
+                overflow-x: auto;
+            }
+
+            header {
+                position: relative !important;
+                align-items: flex-start;
+                flex-direction: column;
+                padding: 1rem !important;
+            }
+
+            header > div:first-child {
+                max-width: 100%;
+                overflow-x: auto;
+                padding-bottom: 0.25rem;
+            }
+
+            main {
+                padding: 1rem !important;
+            }
         }
     </style>
 </head>
@@ -96,8 +252,8 @@
         <!-- Fixed Sidebar -->
         <aside class="w-64 flex-shrink-0 border-r border-theme-border h-screen sticky top-0 flex flex-col pt-6">
             <div class="px-6 mb-8 flex items-center gap-3">
-                <div class="w-8 h-8 rounded bg-theme-accent flex items-center justify-center text-white font-bold text-sm">
-                    <i class="fa-solid fa-bolt"></i>
+                <div class="w-10 h-10 rounded-2xl bg-theme-panel border border-theme-border flex items-center justify-center text-theme-accent font-bold text-sm shadow-sm">
+                    <i class="fa-solid fa-landmark"></i>
                 </div>
                 <div>
                     <h1 class="text-[11px] font-bold text-theme-heading leading-tight tracking-wider uppercase">
@@ -238,7 +394,7 @@
         @auth
             <!-- Top Bar -->
             <header
-                class="h-16 border-b border-theme-border flex items-center justify-between px-8 bg-theme-bg/95 sticky top-0 z-40">
+                class="min-h-16 border-b border-theme-border flex items-center justify-between gap-4 px-8 bg-theme-bg/80 sticky top-0 z-40">
                 <div class="flex items-center gap-2">
                     @if(Auth::user()->role === 'farmer')
                         @php

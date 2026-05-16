@@ -95,8 +95,8 @@ document.addEventListener('DOMContentLoaded', function() {
         maintainAspectRatio: false,
         plugins: { legend: { display: false } },
         scales: {
-            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#9AA8A0' } },
-            x: { grid: { display: false }, ticks: { color: '#9AA8A0', maxRotation: 45 } }
+            y: { grid: { color: 'rgba(35, 72, 23, 0.10)' }, ticks: { color: '#667060' } },
+            x: { grid: { display: false }, ticks: { color: '#667060', maxRotation: 45 } }
         }
     };
 
@@ -107,13 +107,13 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 label: 'Revenue (₹)',
                 data: @json($revenueData),
-                borderColor: 'rgba(245, 158, 11, 1)',
-                backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                borderColor: '#9a5933',
+                backgroundColor: 'rgba(216, 189, 120, 0.20)',
                 fill: true,
                 tension: 0.4,
                 borderWidth: 2,
                 pointRadius: 3,
-                pointBackgroundColor: 'rgba(245, 158, 11, 1)',
+                pointBackgroundColor: '#9a5933',
             }]
         },
         options: chartOpts
@@ -126,8 +126,8 @@ document.addEventListener('DOMContentLoaded', function() {
             datasets: [{
                 label: 'New Connections',
                 data: @json($connectionData),
-                backgroundColor: 'rgba(99, 102, 241, 0.6)',
-                borderColor: 'rgba(99, 102, 241, 1)',
+                backgroundColor: 'rgba(79, 111, 49, 0.62)',
+                borderColor: '#234817',
                 borderWidth: 1,
                 borderRadius: 4,
             }]
