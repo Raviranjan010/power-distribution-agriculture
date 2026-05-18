@@ -17,7 +17,7 @@ return new class extends Migration
             $table->decimal('sanctioned_load_kw', 8, 2);
             $table->string('meter_number')->nullable()->unique();
             $table->foreignId('tariff_category_id')->nullable()->constrained('tariff_categories')->nullOnDelete();
-            $table->enum('status', ['active', 'disconnected', 'pending'])->default('pending');
+            $table->enum('status', ['active', 'disconnected', 'pending', 'rejected'])->default('pending');
             $table->date('installation_date')->nullable();
             $table->foreignId('sdo_id')->nullable()->constrained('users')->nullOnDelete();
             $table->timestamps();

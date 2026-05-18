@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\Connection;
 use App\Models\Complaint;
 use App\Models\MeterReading;
@@ -77,11 +78,16 @@ class FarmerController extends Controller
         ]);
         $user = Auth::user();
 
-        $connection = \Illuminate\Support\Facades\DB::transaction(function () use ($request, $user) {
-            $lastConn = Connection::lockForUpdate()->orderByDesc('id')->first();
-            $nextNum = $lastConn ? $lastConn->id + 1 : 1;
+        $connection = DB::transaction(function() use ($request, $user) {
+            // Use max connection_number suffix instead of id
+            $last = Connection::lockForUpdate()
+                ->where('connection_number', 'like', 'KV-CN-%')
+                ->orderByRaw('CAST(SUBSTRING(connection_number, 7) AS UNSIGNED) DESC')
+                ->first();
+            $nextNum = $last
+                ? ((int) substr($last->connection_number, 6)) + 1
+                : 1;
             $connectionNumber = 'KV-CN-' . str_pad($nextNum, 5, '0', STR_PAD_LEFT);
-
             return Connection::create([
                 'connection_number' => $connectionNumber, 'consumer_id' => $user->id,
                 'connection_type' => $request->connection_type, 'field_name' => $request->field_name,
@@ -103,17 +109,24 @@ class FarmerController extends Controller
         $user = Auth::user();
         Connection::where('id', $request->connection_id)->where('consumer_id', $user->id)->firstOrFail();
 
-        $year = date('Y');
-        $last = Complaint::where('grv_number', 'like', "GRV-{$year}-%")->orderByDesc('id')->first();
-        $nextNum = 1;
-        if ($last && preg_match('/GRV-\d{4}-(\d+)/', $last->grv_number, $m)) $nextNum = intval($m[1]) + 1;
-        $grv = "GRV-{$year}-" . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+        $grv = DB::transaction(function() use ($request, $user) {
+            $year = date('Y');
+            $last = Complaint::lockForUpdate()
+                ->where('grv_number', 'like', "GRV-{$year}-%")
+                ->orderByDesc('id')->first();
+            $nextNum = 1;
+            if ($last && preg_match('/GRV-\d{4}-(\d+)/', $last->grv_number, $m)) $nextNum = intval($m[1]) + 1;
+            $grv = "GRV-{$year}-" . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
 
-        Complaint::create([
-            'grv_number' => $grv, 'consumer_id' => $user->id, 'connection_id' => $request->connection_id,
-            'complaint_type' => $request->complaint_type, 'description' => $request->description,
-            'priority' => $request->priority, 'status' => 'filed', 'filed_at' => now(),
-        ]);
+            Complaint::create([
+                'grv_number' => $grv, 'consumer_id' => $user->id, 'connection_id' => $request->connection_id,
+                'complaint_type' => $request->complaint_type, 'description' => $request->description,
+                'priority' => $request->priority, 'status' => 'filed', 'filed_at' => now(),
+            ]);
+
+            return $grv;
+        });
+
         return back()->with('success', 'Complaint filed! GRV: ' . $grv);
     }
 
@@ -144,9 +157,9 @@ class FarmerController extends Controller
         }
 
         $razorpayOrderId = null;
-        if (env('RAZORPAY_KEY') && env('RAZORPAY_SECRET') && class_exists('\Razorpay\Api\Api')) {
+        if (config('services.razorpay.key') && config('services.razorpay.secret') && class_exists('\Razorpay\Api\Api')) {
             try {
-                $api = new \Razorpay\Api\Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
+                $api = new \Razorpay\Api\Api(config('services.razorpay.key'), config('services.razorpay.secret'));
                 $order = $api->order->create([
                     'receipt' => (string)$bill->id,
                     'amount' => $bill->net_payable * 100,
@@ -164,45 +177,47 @@ class FarmerController extends Controller
     public function payBill(Request $request, $id)
     {
         $user = Auth::user();
-        $bill = Bill::findOrFail($id);
-        // Verify this bill belongs to the user
-        $conn = Connection::where('id', $bill->connection_id)->where('consumer_id', $user->id)->firstOrFail();
-
-        if ($bill->status === 'paid') {
-            return redirect()->route('farmer.bills')->withErrors(['payment' => 'This bill is already paid.']);
-        }
-
-        if ($request->has('razorpay_payment_id') && env('RAZORPAY_KEY') && env('RAZORPAY_SECRET') && class_exists('\Razorpay\Api\Api')) {
-            $api = new \Razorpay\Api\Api(env('RAZORPAY_KEY'), env('RAZORPAY_SECRET'));
-            try {
-                $attributes = [
-                    'razorpay_order_id' => $request->razorpay_order_id,
-                    'razorpay_payment_id' => $request->razorpay_payment_id,
-                    'razorpay_signature' => $request->razorpay_signature
-                ];
-                $api->utility->verifyPaymentSignature($attributes);
-                $txnId = $request->razorpay_payment_id;
-            } catch(\Exception $e) {
-                return back()->withErrors(['payment' => 'Payment verification failed.']);
+        return DB::transaction(function() use ($request, $id, $user) {
+            $bill = Bill::lockForUpdate()->findOrFail($id);
+            Connection::where('id', $bill->connection_id)
+                      ->where('consumer_id', $user->id)->firstOrFail();
+            if ($bill->status === 'paid') {
+                return redirect()->route('farmer.bills')
+                       ->withErrors(['payment' => 'This bill is already paid.']);
             }
-        } else {
-            sleep(1);
-            $txnId = 'TXN-' . now()->format('YmdHis') . '-' . $bill->id;
-        }
 
-        Payment::create([
-            'bill_id' => $bill->id,
-            'consumer_id' => $user->id,
-            'amount' => $bill->net_payable,
-            'payment_method' => 'online',
-            'transaction_id' => $txnId,
-            'status' => 'success',
-            'paid_at' => now(),
-        ]);
+            if ($request->has('razorpay_payment_id') && config('services.razorpay.key') && config('services.razorpay.secret') && class_exists('\Razorpay\Api\Api')) {
+                $api = new \Razorpay\Api\Api(config('services.razorpay.key'), config('services.razorpay.secret'));
+                try {
+                    $attributes = [
+                        'razorpay_order_id' => $request->razorpay_order_id,
+                        'razorpay_payment_id' => $request->razorpay_payment_id,
+                        'razorpay_signature' => $request->razorpay_signature
+                    ];
+                    $api->utility->verifyPaymentSignature($attributes);
+                    $txnId = $request->razorpay_payment_id;
+                } catch(\Exception $e) {
+                    return back()->withErrors(['payment' => 'Payment verification failed.']);
+                }
+            } else {
+                sleep(1);
+                $txnId = 'TXN-' . now()->format('YmdHis') . '-' . $bill->id;
+            }
 
-        $bill->update(['status' => 'paid']);
+            Payment::create([
+                'bill_id' => $bill->id,
+                'consumer_id' => $user->id,
+                'amount' => $bill->net_payable,
+                'payment_method' => 'online',
+                'transaction_id' => $txnId,
+                'status' => 'success',
+                'paid_at' => now(),
+            ]);
 
-        return redirect()->route('farmer.bills')->with('success', 'Payment successful! Transaction ID: ' . $txnId);
+            $bill->update(['status' => 'paid']);
+
+            return redirect()->route('farmer.bills')->with('success', 'Payment successful! Transaction ID: ' . $txnId);
+        });
     }
 
     public function connections()

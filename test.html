@@ -1,0 +1,672 @@
+# Complete CSS Flexbox Visual Playground
+
+Copy this entire code into a single `index.html` file and run it in your browser.
+
+This playground is designed so you can:
+
+* SEE every Flexbox property visually
+* CHANGE values and instantly understand behavior
+* Compare different flex settings side by side
+* Learn like real frontend developers
+
+---
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ultimate Flexbox Playground</title>
+
+<style>
+
+*{
+  margin:0;
+  padding:0;
+  box-sizing:border-box;
+}
+
+body{
+  font-family:Arial, sans-serif;
+  background:#0f172a;
+  color:white;
+  padding:40px;
+}
+
+h1{
+  text-align:center;
+  margin-bottom:50px;
+  font-size:42px;
+}
+
+section{
+  margin-bottom:100px;
+  background:#1e293b;
+  padding:30px;
+  border-radius:20px;
+  border:2px solid rgba(255,255,255,0.1);
+}
+
+h2{
+  margin-bottom:20px;
+  color:#38bdf8;
+}
+
+p{
+  margin-bottom:20px;
+  line-height:1.7;
+}
+
+.container{
+  background:#334155;
+  border:3px dashed white;
+  padding:20px;
+  min-height:200px;
+}
+
+.box{
+  width:100px;
+  height:100px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-weight:bold;
+  border-radius:12px;
+  font-size:18px;
+}
+
+.box1{ background:#ef4444; }
+.box2{ background:#22c55e; }
+.box3{ background:#3b82f6; }
+.box4{ background:#eab308; color:black; }
+
+/* -------------------------------- */
+/* 1. BASIC FLEX */
+/* -------------------------------- */
+
+.basic-flex{
+  display:flex;
+}
+
+/* -------------------------------- */
+/* 2. FLEX DIRECTION */
+/* -------------------------------- */
+
+.row{
+  display:flex;
+  flex-direction:row;
+}
+
+.column{
+  display:flex;
+  flex-direction:column;
+}
+
+.row-reverse{
+  display:flex;
+  flex-direction:row-reverse;
+}
+
+.column-reverse{
+  display:flex;
+  flex-direction:column-reverse;
+}
+
+/* -------------------------------- */
+/* 3. JUSTIFY CONTENT */
+/* -------------------------------- */
+
+.justify-center{
+  display:flex;
+  justify-content:center;
+}
+
+.space-between{
+  display:flex;
+  justify-content:space-between;
+}
+
+.space-around{
+  display:flex;
+  justify-content:space-around;
+}
+
+.space-evenly{
+  display:flex;
+  justify-content:space-evenly;
+}
+
+/* -------------------------------- */
+/* 4. ALIGN ITEMS */
+/* -------------------------------- */
+
+.align-container{
+  display:flex;
+  height:300px;
+}
+
+.align-start{
+  align-items:flex-start;
+}
+
+.align-center{
+  align-items:center;
+}
+
+.align-end{
+  align-items:flex-end;
+}
+
+/* -------------------------------- */
+/* 5. FLEX WRAP */
+/* -------------------------------- */
+
+.nowrap{
+  display:flex;
+  flex-wrap:nowrap;
+}
+
+.wrap{
+  display:flex;
+  flex-wrap:wrap;
+}
+
+.wrap .box,
+.nowrap .box{
+  width:200px;
+}
+
+/* -------------------------------- */
+/* 6. GAP */
+/* -------------------------------- */
+
+.gap-demo{
+  display:flex;
+  gap:20px;
+}
+
+/* -------------------------------- */
+/* 7. PERFECT CENTER */
+/* -------------------------------- */
+
+.center-box{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  height:400px;
+}
+
+.big-card{
+  width:250px;
+  height:150px;
+  background:#8b5cf6;
+  border-radius:20px;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  font-size:28px;
+  font-weight:bold;
+}
+
+/* -------------------------------- */
+/* 8. FLEX GROW */
+/* -------------------------------- */
+
+.grow-container{
+  display:flex;
+}
+
+.grow1{
+  flex:1;
+}
+
+.grow2{
+  flex:2;
+}
+
+.grow3{
+  flex:3;
+}
+
+/* -------------------------------- */
+/* 9. NAVBAR */
+/* -------------------------------- */
+
+.navbar{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  background:black;
+  padding:20px;
+  border-radius:15px;
+}
+
+.menu{
+  display:flex;
+  gap:20px;
+}
+
+.menu a{
+  color:white;
+  text-decoration:none;
+}
+
+/* -------------------------------- */
+/* 10. RESPONSIVE CARD LAYOUT */
+/* -------------------------------- */
+
+.card-layout{
+  display:flex;
+  flex-wrap:wrap;
+  gap:20px;
+}
+
+.card{
+  flex:1 1 250px;
+  background:#475569;
+  padding:30px;
+  border-radius:20px;
+  min-height:180px;
+}
+
+</style>
+</head>
+<body>
+
+<h1>ULTIMATE FLEXBOX VISUAL PLAYGROUND</h1>
+
+<!-- 1 -->
+<section>
+<h2>1. display:flex</h2>
+<p>
+Normally divs stack vertically.
+When you use <b>display:flex</b>, they become horizontal.
+</p>
+
+<div class="container basic-flex">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+</section>
+
+<!-- 2 -->
+<section>
+<h2>2. flex-direction</h2>
+<p>
+Change direction of items.
+Try changing row to column.
+</p>
+
+<h3>ROW</h3>
+<div class="container row">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+
+<br><br>
+
+<h3>COLUMN</h3>
+<div class="container column">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+
+<br><br>
+
+<h3>ROW REVERSE</h3>
+<div class="container row-reverse">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+
+<br><br>
+
+<h3>COLUMN REVERSE</h3>
+<div class="container column-reverse">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+</section>
+
+<!-- 3 -->
+<section>
+<h2>3. justify-content</h2>
+<p>
+Controls horizontal spacing (main axis in row).
+</p>
+
+<h3>CENTER</h3>
+<div class="container justify-center">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+
+<br><br>
+
+<h3>SPACE BETWEEN</h3>
+<div class="container space-between">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+
+<br><br>
+
+<h3>SPACE AROUND</h3>
+<div class="container space-around">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+
+<br><br>
+
+<h3>SPACE EVENLY</h3>
+<div class="container space-evenly">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+</section>
+
+<!-- 4 -->
+<section>
+<h2>4. align-items</h2>
+<p>
+Controls vertical alignment.
+</p>
+
+<h3>FLEX START</h3>
+<div class="container align-container align-start">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+
+<br><br>
+
+<h3>CENTER</h3>
+<div class="container align-container align-center">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+
+<br><br>
+
+<h3>FLEX END</h3>
+<div class="container align-container align-end">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+</section>
+
+<!-- 5 -->
+<section>
+<h2>5. flex-wrap</h2>
+<p>
+Resize browser window to understand wrap.
+</p>
+
+<h3>NOWRAP</h3>
+<div class="container nowrap">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+  <div class="box box4">4</div>
+</div>
+
+<br><br>
+
+<h3>WRAP</h3>
+<div class="container wrap">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+  <div class="box box4">4</div>
+</div>
+</section>
+
+<!-- 6 -->
+<section>
+<h2>6. gap</h2>
+<p>
+Modern spacing between flex items.
+</p>
+
+<div class="container gap-demo">
+  <div class="box box1">1</div>
+  <div class="box box2">2</div>
+  <div class="box box3">3</div>
+</div>
+</section>
+
+<!-- 7 -->
+<section>
+<h2>7. Perfect Centering</h2>
+<p>
+This is one of the most famous Flexbox tricks.
+</p>
+
+<div class="container center-box">
+  <div class="big-card">
+    CENTERED
+  </div>
+</div>
+</section>
+
+<!-- 8 -->
+<section>
+<h2>8. flex-grow</h2>
+<p>
+Different flex values take different space.
+</p>
+
+<div class="container grow-container">
+
+  <div class="box box1 grow1">
+    flex:1
+  </div>
+
+  <div class="box box2 grow2">
+    flex:2
+  </div>
+
+  <div class="box box3 grow3">
+    flex:3
+  </div>
+
+</div>
+</section>
+
+<!-- 9 -->
+<section>
+<h2>9. Real Navbar Example</h2>
+<p>
+This is how modern navbars are built.
+</p>
+
+<nav class="navbar">
+
+  <h2>LOGO</h2>
+
+  <div class="menu">
+    <a href="#">Home</a>
+    <a href="#">About</a>
+    <a href="#">Projects</a>
+    <a href="#">Contact</a>
+  </div>
+
+</nav>
+</section>
+
+<!-- 10 -->
+<section>
+<h2>10. Responsive Card Layout</h2>
+<p>
+Resize browser to see cards wrap automatically.
+</p>
+
+<div class="card-layout">
+
+  <div class="card">
+    CARD 1
+  </div>
+
+  <div class="card">
+    CARD 2
+  </div>
+
+  <div class="card">
+    CARD 3
+  </div>
+
+  <div class="card">
+    CARD 4
+  </div>
+
+</div>
+</section>
+
+</body>
+</html>
+```
+
+---
+
+# MOST IMPORTANT EXPERIMENTS
+
+## Experiment 1
+
+Change:
+
+```css
+justify-content:center;
+```
+
+TO:
+
+```css
+justify-content:flex-end;
+```
+
+Watch items move.
+
+---
+
+## Experiment 2
+
+Change:
+
+```css
+flex-direction:row;
+```
+
+TO:
+
+```css
+flex-direction:column;
+```
+
+Now observe:
+
+* main axis changes
+* justify-content direction changes
+* align-items direction changes
+
+This is THE most important Flexbox insight.
+
+---
+
+## Experiment 3
+
+Remove:
+
+```css
+flex-wrap:wrap;
+```
+
+Resize browser.
+
+See items overflow/squish.
+
+---
+
+## Experiment 4
+
+Change:
+
+```css
+gap:20px;
+```
+
+TO:
+
+```css
+gap:60px;
+```
+
+Observe spacing.
+
+---
+
+## Experiment 5
+
+Change:
+
+```css
+flex:1;
+flex:2;
+flex:3;
+```
+
+TO:
+
+```css
+flex:1;
+flex:1;
+flex:1;
+```
+
+Now all boxes become equal.
+
+---
+
+# FINAL REAL-WORLD UNDERSTANDING
+
+| Property        | What It Controls     |
+| --------------- | -------------------- |
+| display:flex    | activates flexbox    |
+| flex-direction  | row or column        |
+| justify-content | main axis alignment  |
+| align-items     | cross axis alignment |
+| flex-wrap       | wrapping behavior    |
+| gap             | spacing              |
+| flex            | item sizing          |
+
+---
+
+# MOST IMPORTANT FLEXBOX SECRET
+
+When direction changes:
+
+```css
+flex-direction:column;
+```
+
+Main axis ALSO changes.
+
+So:
+
+* justify-content becomes vertical
+* align-items becomes horizontal
+
+This is where most beginners get confused.

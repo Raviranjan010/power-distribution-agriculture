@@ -11,60 +11,23 @@ Route::get('/', function () {
     return view('welcome');
 })->name('home');
 
-Route::get('/health', function () {
-    $results = [];
-    try {
-        \Illuminate\Support\Facades\DB::connection()->getPdo();
-        $results['database'] = 'Connected';
-    } catch (\Exception $e) {
-        $results['database'] = 'Error: ' . $e->getMessage();
-    }
-    
-    $results['storage'] = is_writable(storage_path()) ? 'Writable' : 'Not Writable';
-    $results['session_driver'] = config('session.driver');
-    $results['app_env'] = config('app.env');
-    $results['app_debug'] = config('app.debug');
-    
-    return response()->json($results);
-});
-
-Route::get('/health/db-fix', function () {
-    $output = "";
-    try {
-        // Manually ensure the state column exists in zones table
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('zones', 'state')) {
-            \Illuminate\Support\Facades\Schema::table('zones', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('state')->default('Rajasthan')->after('name');
-            });
-            $output .= "Added 'state' column to 'zones' table.\n";
-        } else {
-            $output .= "'state' column already exists in 'zones' table.\n";
-        }
-
-        // Manually ensure avatar column exists in users table
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('users', 'avatar')) {
-            \Illuminate\Support\Facades\Schema::table('users', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('avatar')->nullable()->after('password');
-            });
-            $output .= "Added 'avatar' column to 'users' table.\n";
+Route::middleware(['auth', 'role:admin'])->group(function () {
+    Route::get('/health', function () {
+        $results = [];
+        try {
+            \Illuminate\Support\Facades\DB::connection()->getPdo();
+            $results['database'] = 'Connected';
+        } catch (\Exception $e) {
+            $results['database'] = 'Error: ' . $e->getMessage();
         }
         
-        // Manually ensure document_path column exists in consumer_subsidies table
-        if (!\Illuminate\Support\Facades\Schema::hasColumn('consumer_subsidies', 'document_path')) {
-            \Illuminate\Support\Facades\Schema::table('consumer_subsidies', function (\Illuminate\Database\Schema\Blueprint $table) {
-                $table->string('document_path')->nullable();
-            });
-            $output .= "Added 'document_path' column to 'consumer_subsidies' table.\n";
-        }
-
-        // Run migrations
-        \Illuminate\Support\Facades\Artisan::call('migrate', ['--force' => true]);
-        $output .= \Illuminate\Support\Facades\Artisan::output();
+        $results['storage'] = is_writable(storage_path()) ? 'Writable' : 'Not Writable';
+        $results['session_driver'] = config('session.driver');
+        $results['app_env'] = config('app.env');
+        $results['app_debug'] = config('app.debug');
         
-        return "<pre>DB Fix run successfully.\nOutput:\n" . htmlspecialchars($output) . "</pre>";
-    } catch (\Exception $e) {
-        return "<pre>DB Fix encountered an error.\nError:\n" . htmlspecialchars($e->getMessage()) . "\n\nPartial Output:\n" . htmlspecialchars($output) . "</pre>";
-    }
+        return response()->json($results);
+    });
 });
 
 Route::get('/login', [AuthController::class, 'showLogin'])->name('login');
@@ -94,6 +57,9 @@ Route::middleware(['auth', 'role:admin'])->prefix('admin')->name('admin.')->grou
     Route::get('/audit-logs', [AdminController::class, 'auditLogs'])->name('audit_logs');
     Route::get('/zones', [AdminController::class, 'zones'])->name('zones');
     Route::post('/zones', [AdminController::class, 'storeZone'])->name('zones.store');
+    Route::patch('/zones/{id}', [AdminController::class, 'updateZone'])->name('zones.update');
+    Route::delete('/zones/{id}', [AdminController::class, 'deleteZone'])->name('zones.delete');
+    Route::post('/zones/{id}/assign-sdo', [AdminController::class, 'assignSdo'])->name('zones.assign_sdo');
     Route::get('/export', [AdminController::class, 'exportReport'])->name('export');
 });
 

@@ -59,13 +59,33 @@ class OfficerController extends Controller
     public function approveConnection(Request $request, $id)
     {
         $request->validate(['tariff_category_id' => 'required|exists:tariff_categories,id']);
-        $conn = Connection::where('id', $id)
-            ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
-            ->firstOrFail();
-        $conn->update([
-            'tariff_category_id' => $request->tariff_category_id, 'meter_number' => 'MT-' . rand(10000, 99999),
-            'status' => 'active', 'installation_date' => now(), 'sdo_id' => Auth::id(),
-        ]);
+        
+        $conn = \Illuminate\Support\Facades\DB::transaction(function() use ($request, $id) {
+            $conn = Connection::where('id', $id)
+                ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $last = Connection::where('meter_number', 'like', 'MT-%')
+                ->orderByRaw('CAST(SUBSTRING(meter_number, 4) AS UNSIGNED) DESC')
+                ->lockForUpdate()
+                ->first();
+
+            $nextNum = $last
+                ? ((int) substr($last->meter_number, 3)) + 1
+                : 10000;
+
+            $conn->update([
+                'tariff_category_id' => $request->tariff_category_id,
+                'meter_number' => 'MT-' . $nextNum,
+                'status' => 'active',
+                'installation_date' => now(),
+                'sdo_id' => Auth::id(),
+            ]);
+
+            return $conn;
+        });
+
         $conn->load('consumer', 'tariffCategory');
         try {
             Mail::to($conn->consumer->email)->send(new ConnectionApproved($conn));
@@ -78,7 +98,7 @@ class OfficerController extends Controller
         $conn = Connection::where('id', $id)
             ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
             ->firstOrFail();
-        $conn->update(['status' => 'disconnected']);
+        $conn->update(['status' => 'rejected']);
         return back()->with('success', 'Connection ' . $conn->connection_number . ' rejected.');
     }
 
@@ -133,12 +153,26 @@ class OfficerController extends Controller
             $fc = $conn->sanctioned_load_kw * $t->fixed_charge_per_kw;
             $tax = ($ec + $fc) * 0.05;
 
+            $approvedSubsidy = ConsumerSubsidy::where('consumer_id', $conn->consumer_id)
+                ->where('status', 'approved')
+                ->whereHas('scheme', fn($q) => $q->where('is_active', true)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now()))
+                ->with('scheme')->first();
+
+            $subsidyAmount = 0;
+            if ($approvedSubsidy) {
+                $coveredUnits = min($reading->units_consumed, $approvedSubsidy->scheme->max_units_covered);
+                $subsidyAmount = $coveredUnits * $t->rate_per_unit
+                                 * ($approvedSubsidy->scheme->discount_percentage / 100);
+            }
+
             $bill = Bill::create([
                 'bill_number' => 'BILL-' . now()->format('Ym') . '-C' . $conn->id . '-' . $reading->id,
                 'connection_id' => $conn->id, 'meter_reading_id' => $reading->id,
                 'billing_month' => $cm, 'billing_year' => $cy, 'units_consumed' => $reading->units_consumed,
                 'rate_per_unit' => $t->rate_per_unit, 'energy_charges' => $ec, 'fixed_charges' => $fc,
-                'taxes' => $tax, 'subsidy_amount' => 0, 'net_payable' => $ec + $fc + $tax,
+                'taxes' => $tax, 'subsidy_amount' => $subsidyAmount, 'net_payable' => max(0, $ec + $fc + $tax - $subsidyAmount),
                 'due_date' => Carbon::create($cy, $cm)->endOfMonth()->addDays(15),
                 'status' => 'pending', 'generated_by' => Auth::id(),
             ]);

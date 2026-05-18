@@ -231,15 +231,59 @@ class AdminController extends Controller
             'name' => 'required|string|max:100',
             'district' => 'required|string|max:100',
             'state' => 'required|string|max:100',
+            'sdo_id' => 'nullable|exists:users,id',
         ]);
 
         Zone::create([
             'name' => $request->name,
             'district' => $request->district,
             'state' => $request->state,
+            'sdo_id' => $request->sdo_id,
         ]);
 
         return back()->with('success', 'Zone created successfully!');
+    }
+
+    public function updateZone(Request $request, $id)
+    {
+        $request->validate([
+            'name' => 'required|string|max:100',
+            'district' => 'required|string|max:100',
+            'state' => 'required|string|max:100',
+            'sdo_id' => 'nullable|exists:users,id',
+        ]);
+
+        $zone = Zone::findOrFail($id);
+        $zone->update([
+            'name' => $request->name,
+            'district' => $request->district,
+            'state' => $request->state,
+            'sdo_id' => $request->sdo_id,
+        ]);
+
+        return back()->with('success', 'Zone updated successfully!');
+    }
+
+    public function deleteZone($id)
+    {
+        $zone = Zone::findOrFail($id);
+        $zone->delete();
+
+        return back()->with('success', 'Zone deleted successfully!');
+    }
+
+    public function assignSdo(Request $request, $id)
+    {
+        $request->validate([
+            'sdo_id' => 'nullable|exists:users,id',
+        ]);
+
+        $zone = Zone::findOrFail($id);
+        $zone->update([
+            'sdo_id' => $request->sdo_id,
+        ]);
+
+        return back()->with('success', 'SDO assigned to zone successfully!');
     }
 
     public function exportReport(Request $request)

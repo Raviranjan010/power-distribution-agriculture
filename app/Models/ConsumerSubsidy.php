@@ -7,8 +7,8 @@ use Illuminate\Database\Eloquent\Model;
 class ConsumerSubsidy extends Model
 {
     protected $fillable = [
-        'consumer_id', 'scheme_id', 'approved_by', 'status', 'applied_at', 
-        'approved_at', 'remarks'
+        'consumer_id', 'scheme_id', 'approved_by', 'status',
+        'applied_at', 'approved_at', 'remarks', 'document_path'
     ];
     protected $casts = [
         'applied_at' => 'datetime',
