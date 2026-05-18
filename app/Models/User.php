@@ -24,6 +24,7 @@ class User extends Authenticatable
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
         'is_active' => 'boolean',
+        'aadhar_number' => 'encrypted',
     ];
 
     public function connections() { return $this->hasMany(Connection::class, 'consumer_id'); }

@@ -95,6 +95,17 @@ class FarmerController extends Controller
             ]);
         });
 
+        // Notify SDOs in the same zone
+        $officers = \App\Models\User::where('role', 'sdo')->where('zone_id', $user->zone_id)->get();
+        foreach ($officers as $officer) {
+            $officer->notify(new \App\Notifications\RealTimeNotification(
+                'New Connection Request',
+                'Farmer ' . $user->name . ' has requested a new connection: ' . $connection->connection_number,
+                route('officer.dashboard'),
+                'fa-solid fa-file-signature'
+            ));
+        }
+
         return back()->with('success', 'Connection request submitted! #' . $connection->connection_number);
     }
 

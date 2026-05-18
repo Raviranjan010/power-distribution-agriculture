@@ -420,6 +420,30 @@
                     @endif
                 </div>
 
+                <!-- Notification Bell -->
+                <div class="relative mr-4">
+                    <button id="notificationBell" class="relative p-2 text-theme-text hover:text-theme-heading transition-all duration-200 focus:outline-none rounded-lg hover:bg-theme-border/20">
+                        <i class="fa-solid fa-bell text-lg"></i>
+                        <span id="notificationBadge" class="hidden absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white leading-none">
+                            0
+                        </span>
+                    </button>
+                    
+                    <!-- Dropdown Panel -->
+                    <div id="notificationDropdown" class="hidden absolute right-0 top-12 w-80 bg-theme-panel border border-theme-border rounded-xl shadow-2xl z-50 overflow-hidden backdrop-blur-md">
+                        <div class="p-3.5 border-b border-theme-border flex justify-between items-center bg-theme-bg/40">
+                            <span class="text-xs font-bold text-theme-heading uppercase tracking-wider">Alerts</span>
+                            <button id="markAllReadBtn" class="text-[10px] text-theme-accent hover:text-theme-hover hover:underline font-bold focus:outline-none transition-colors">Mark all read</button>
+                        </div>
+                        <div id="notificationList" class="max-h-72 overflow-y-auto divide-y divide-theme-border/40">
+                            <div class="p-6 text-center text-xs text-theme-text opacity-70">
+                                <i class="fa-solid fa-bell-slash mb-2 text-lg block opacity-50"></i>
+                                No new notifications
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <div class="flex items-center gap-3 pl-4 border-l border-theme-border">
                     @if(Auth::user()->avatar)
                         <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="{{ Auth::user()->name }}" class="w-8 h-8 rounded-full object-cover border border-emerald-500/30">
@@ -464,6 +488,208 @@
         </main>
     </div>
 
+    <!-- Real-time Notifications Client -->
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const bell = document.getElementById('notificationBell');
+            const dropdown = document.getElementById('notificationDropdown');
+            const badge = document.getElementById('notificationBadge');
+            const list = document.getElementById('notificationList');
+            const markAllRead = document.getElementById('markAllReadBtn');
+            
+            let knownNotifications = new Set(JSON.parse(localStorage.getItem('known_notifications') || '[]'));
+
+            // Toggle Dropdown
+            if (bell && dropdown) {
+                bell.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    dropdown.classList.toggle('hidden');
+                    if (!dropdown.classList.contains('hidden')) {
+                        fetchNotifications();
+                    }
+                });
+
+                document.addEventListener('click', function(e) {
+                    if (!dropdown.contains(e.target) && !bell.contains(e.target)) {
+                        dropdown.classList.add('hidden');
+                    }
+                });
+            }
+
+            // Fetch & Poll Notifications
+            function fetchNotifications() {
+                fetch('{{ route("notifications.poll") }}')
+                    .then(response => response.json())
+                    .then(data => {
+                        updateBadge(data.unread_count);
+                        renderNotifications(data.notifications);
+                        checkForNewAlerts(data.notifications);
+                    })
+                    .catch(err => console.error('Error fetching notifications:', err));
+            }
+
+            function updateBadge(count) {
+                if (badge) {
+                    if (count > 0) {
+                        badge.textContent = count;
+                        badge.classList.remove('hidden');
+                    } else {
+                        badge.classList.add('hidden');
+                    }
+                }
+            }
+
+            function renderNotifications(notifications) {
+                if (!list) return;
+                
+                if (notifications.length === 0) {
+                    list.innerHTML = `
+                        <div class="p-6 text-center text-xs text-theme-text opacity-70">
+                            <i class="fa-solid fa-bell-slash mb-2 text-lg block opacity-50"></i>
+                            No new notifications
+                        </div>
+                    `;
+                    return;
+                }
+
+                list.innerHTML = notifications.map(notif => {
+                    const iconColor = notif.title.toLowerCase().includes('approve') || notif.title.toLowerCase().includes('resolved')
+                        ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
+                        : (notif.title.toLowerCase().includes('bill') 
+                            ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' 
+                            : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/20');
+
+                    return `
+                        <a href="/notifications/${notif.id}/read" class="block p-4 hover:bg-theme-border/25 transition-all duration-200">
+                            <div class="flex gap-3">
+                                <div class="w-8 h-8 rounded-lg ${iconColor} flex items-center justify-center flex-shrink-0">
+                                    <i class="${notif.icon}"></i>
+                                </div>
+                                <div class="flex-grow">
+                                    <div class="flex justify-between items-start mb-0.5">
+                                        <p class="text-xs font-bold text-theme-heading leading-tight">${notif.title}</p>
+                                        <span class="text-[9px] text-theme-text opacity-60">${notif.created_at}</span>
+                                    </div>
+                                    <p class="text-[11px] text-theme-text leading-snug">${notif.message}</p>
+                                </div>
+                            </div>
+                        </a>
+                    `;
+                }).join('');
+            }
+
+            function checkForNewAlerts(notifications) {
+                let hasNew = false;
+                notifications.forEach(notif => {
+                    if (!knownNotifications.has(notif.id)) {
+                        knownNotifications.add(notif.id);
+                        hasNew = true;
+                        showToast(notif);
+                    }
+                });
+
+                if (hasNew) {
+                    localStorage.setItem('known_notifications', JSON.stringify(Array.from(knownNotifications)));
+                }
+            }
+
+            function showToast(notif) {
+                const toastContainer = document.getElementById('toastContainer') || createToastContainer();
+                
+                const toast = document.createElement('div');
+                toast.className = 'w-80 bg-theme-panel border border-theme-border rounded-xl shadow-2xl p-4 flex gap-3 transition-all duration-300 transform translate-x-full cursor-pointer hover:bg-theme-border/10';
+                
+                const iconColor = notif.title.toLowerCase().includes('approve') || notif.title.toLowerCase().includes('resolved')
+                    ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/20'
+                    : (notif.title.toLowerCase().includes('bill') 
+                        ? 'bg-amber-500/20 text-amber-500 border border-amber-500/20' 
+                        : 'bg-indigo-500/20 text-indigo-400 border border-indigo-500/20');
+
+                toast.innerHTML = `
+                    <div class="w-8 h-8 rounded-lg ${iconColor} flex items-center justify-center flex-shrink-0">
+                        <i class="${notif.icon}"></i>
+                    </div>
+                    <div class="flex-grow">
+                        <div class="flex justify-between items-start mb-0.5">
+                            <p class="text-xs font-bold text-theme-heading leading-tight">${notif.title}</p>
+                            <button class="toast-close text-theme-text hover:text-theme-heading text-xs focus:outline-none"><i class="fa-solid fa-xmark"></i></button>
+                        </div>
+                        <p class="text-[11px] text-theme-text leading-snug">${notif.message}</p>
+                    </div>
+                `;
+
+                toast.addEventListener('click', function(e) {
+                    if (e.target.closest('.toast-close')) {
+                        e.stopPropagation();
+                        toast.remove();
+                    } else {
+                        window.location.href = `/notifications/${notif.id}/read`;
+                    }
+                });
+
+                toastContainer.appendChild(toast);
+                
+                // Animate Slide-In
+                setTimeout(() => {
+                    toast.classList.remove('translate-x-full');
+                }, 100);
+
+                // Auto Remove
+                setTimeout(() => {
+                    toast.classList.add('opacity-0');
+                    setTimeout(() => {
+                        toast.remove();
+                    }, 300);
+                }, 6000);
+            }
+
+            function createToastContainer() {
+                const container = document.createElement('div');
+                container.id = 'toastContainer';
+                container.className = 'fixed bottom-6 right-6 flex flex-col gap-3 z-50';
+                document.body.appendChild(container);
+                return container;
+            }
+
+            // Mark All Read Action
+            if (markAllRead) {
+                markAllRead.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    fetch('{{ route("notifications.read_all") }}', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRF-TOKEN': '{{ csrf_token() }}'
+                        }
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            updateBadge(0);
+                            renderNotifications([]);
+                        }
+                    })
+                    .catch(err => console.error('Error marking all as read:', err));
+                });
+            }
+
+            // Initialize Echo real-time listener if Echo is globally registered
+            @auth
+                if (window.Echo) {
+                    window.Echo.private('App.Models.User.{{ Auth::id() }}')
+                        .notification((notification) => {
+                            fetchNotifications(); // Instant refresh on broadcast notification event!
+                        });
+                }
+            @endauth
+
+            // Run initial fetch and set interval polling (8 seconds)
+            @auth
+                fetchNotifications();
+                setInterval(fetchNotifications, 8000);
+            @endauth
+        });
+    </script>
 </body>
 
 </html>

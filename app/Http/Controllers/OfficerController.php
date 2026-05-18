@@ -90,6 +90,15 @@ class OfficerController extends Controller
         try {
             Mail::to($conn->consumer->email)->send(new ConnectionApproved($conn));
         } catch (\Exception $e) {}
+
+        // Notify Farmer
+        $conn->consumer->notify(new \App\Notifications\RealTimeNotification(
+            'Connection Approved',
+            'Your connection request ' . $conn->connection_number . ' has been approved! Meter ' . $conn->meter_number . ' is active.',
+            route('farmer.connections'),
+            'fa-solid fa-circle-check'
+        ));
+
         return back()->with('success', 'Connection ' . $conn->connection_number . ' approved!');
     }
 
@@ -122,6 +131,15 @@ class OfficerController extends Controller
         try {
             Mail::to($c->consumer->email)->send(new ComplaintResolved($c));
         } catch (\Exception $e) {}
+
+        // Notify Farmer
+        $c->consumer->notify(new \App\Notifications\RealTimeNotification(
+            'Complaint Resolved',
+            'Your complaint #' . $c->grv_number . ' has been marked as resolved. Remarks: ' . $c->resolution_remarks,
+            route('farmer.complaints'),
+            'fa-solid fa-square-check'
+        ));
+
         return back()->with('success', 'Complaint resolved.');
     }
 
@@ -180,6 +198,17 @@ class OfficerController extends Controller
             try {
                 Mail::to($conn->consumer->email ?? $bill->connection->consumer->email)->send(new BillGenerated($bill));
             } catch (\Exception $e) {}
+
+            // Notify Farmer
+            if ($conn->consumer) {
+                $conn->consumer->notify(new \App\Notifications\RealTimeNotification(
+                    'New Bill Generated',
+                    'A new electricity bill ' . $bill->bill_number . ' of ₹' . number_format($bill->net_payable, 2) . ' has been generated for ' . $conn->connection_number . '.',
+                    route('farmer.bills'),
+                    'fa-solid fa-file-invoice'
+                ));
+            }
+
             $count++;
         }
         return back()->with('success', $count . ' bills generated.');
