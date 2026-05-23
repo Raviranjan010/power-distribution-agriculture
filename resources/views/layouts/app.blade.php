@@ -422,7 +422,6 @@
 
                 <!-- Actions (Language Selector & Notification Bell) -->
                 <div class="flex items-center gap-3 ml-auto">
-                    @include('partials.language-selector')
 
                     <!-- Notification Bell -->
                     <div class="relative mr-2">

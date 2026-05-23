@@ -14,10 +14,6 @@
 </head>
 <body class="text-theme-text antialiased min-h-screen flex items-center justify-center relative">
 
-<!-- Floating Language Selector (Top-Right) -->
-<div style="position: absolute; top: 24px; right: 24px; z-index: 1000;">
-    @include('partials.language-selector')
-</div>
 
 <div class="w-full max-w-md px-6">
     <div class="text-center mb-8">

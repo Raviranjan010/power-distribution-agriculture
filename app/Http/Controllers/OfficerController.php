@@ -18,6 +18,7 @@ use Illuminate\Support\Facades\Mail;
 use App\Mail\BillGenerated;
 use App\Mail\ConnectionApproved;
 use App\Mail\ComplaintResolved;
+use App\Models\AuditLog;
 
 class OfficerController extends Controller
 {
@@ -87,9 +88,15 @@ class OfficerController extends Controller
         });
 
         $conn->load('consumer', 'tariffCategory');
+        AuditLog::create([
+            'user_id' => Auth::id(), 'action' => 'approved_connection',
+            'model_type' => 'Connection', 'model_id' => $conn->id,
+            'new_values' => ['connection_number' => $conn->connection_number, 'meter_number' => $conn->meter_number],
+            'ip_address' => request()->ip(),
+        ]);
         try {
             Mail::to($conn->consumer->email)->send(new ConnectionApproved($conn));
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) { \Log::warning('Mail failed: ' . $e->getMessage()); }
 
         // Notify Farmer
         $conn->consumer->notify(new \App\Notifications\RealTimeNotification(
@@ -108,6 +115,11 @@ class OfficerController extends Controller
             ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
             ->firstOrFail();
         $conn->update(['status' => 'rejected']);
+        AuditLog::create([
+            'user_id' => Auth::id(), 'action' => 'rejected_connection',
+            'model_type' => 'Connection', 'model_id' => $conn->id,
+            'ip_address' => request()->ip(),
+        ]);
         return back()->with('success', 'Connection ' . $conn->connection_number . ' rejected.');
     }
 
@@ -130,7 +142,7 @@ class OfficerController extends Controller
         $c->load('consumer');
         try {
             Mail::to($c->consumer->email)->send(new ComplaintResolved($c));
-        } catch (\Exception $e) {}
+        } catch (\Exception $e) { \Log::warning('Mail failed: ' . $e->getMessage()); }
 
         // Notify Farmer
         $c->consumer->notify(new \App\Notifications\RealTimeNotification(
@@ -203,14 +215,18 @@ class OfficerController extends Controller
                     $subsidyAmount = $coveredUnits * $t->rate_per_unit * ($autoScheme->discount_percentage / 100);
 
                     // Auto-record the connection's claim in consumer_subsidies table for persistent tracking
-                    ConsumerSubsidy::create([
-                        'consumer_id' => $conn->consumer_id,
-                        'scheme_id' => $autoScheme->id,
-                        'status' => 'approved',
-                        'approved_by' => $user->id,
-                        'approved_at' => now(),
-                        'remarks' => 'Auto-applied during billing based on agricultural tariff category eligibility.',
-                    ]);
+                    ConsumerSubsidy::firstOrCreate(
+                        [
+                            'consumer_id' => $conn->consumer_id,
+                            'scheme_id' => $autoScheme->id,
+                        ],
+                        [
+                            'status' => 'approved',
+                            'approved_by' => $user->id,
+                            'approved_at' => now(),
+                            'remarks' => 'Auto-applied during billing based on agricultural tariff category eligibility.',
+                        ]
+                    );
                 }
             }
 
@@ -226,7 +242,7 @@ class OfficerController extends Controller
             $bill->load('connection.consumer');
             try {
                 Mail::to($conn->consumer->email ?? $bill->connection->consumer->email)->send(new BillGenerated($bill));
-            } catch (\Exception $e) {}
+            } catch (\Exception $e) { \Log::warning('Mail failed: ' . $e->getMessage()); }
 
             // Notify Farmer
             if ($conn->consumer) {
@@ -240,6 +256,11 @@ class OfficerController extends Controller
 
             $count++;
         }
+        AuditLog::create([
+            'user_id' => Auth::id(), 'action' => 'generated_bills',
+            'model_type' => 'Bill', 'new_values' => ['count' => $count, 'month' => $cm, 'year' => $cy],
+            'ip_address' => request()->ip(),
+        ]);
         return back()->with('success', $count . ' bills generated.');
     }
 
@@ -249,6 +270,11 @@ class OfficerController extends Controller
             ->whereHas('consumer', fn($q) => $q->where('zone_id', Auth::user()->zone_id))
             ->firstOrFail()
             ->update(['status' => 'approved', 'approved_by' => Auth::id(), 'approved_at' => now()]);
+        AuditLog::create([
+            'user_id' => Auth::id(), 'action' => 'approved_subsidy',
+            'model_type' => 'ConsumerSubsidy', 'model_id' => $id,
+            'ip_address' => request()->ip(),
+        ]);
         return back()->with('success', 'Subsidy approved!');
     }
 
@@ -260,6 +286,11 @@ class OfficerController extends Controller
             ->update([
             'status' => 'rejected', 'approved_by' => Auth::id(), 'approved_at' => now(),
             'remarks' => $request->input('remarks', 'Rejected by SDO.'),
+        ]);
+        AuditLog::create([
+            'user_id' => Auth::id(), 'action' => 'rejected_subsidy',
+            'model_type' => 'ConsumerSubsidy', 'model_id' => $id,
+            'ip_address' => request()->ip(),
         ]);
         return back()->with('success', 'Subsidy rejected.');
     }

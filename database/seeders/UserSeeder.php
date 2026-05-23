@@ -11,6 +11,8 @@ class UserSeeder extends Seeder
 {
     public function run(): void
     {
+        // ⚠️ SECURITY WARNING: The default password 'password' is for development/demo only.
+        // You MUST change all passwords immediately after deploying to any non-local environment.
         $password = Hash::make('password');
         $zones = Zone::all();
 

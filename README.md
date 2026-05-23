@@ -120,6 +120,8 @@ If these keys are not set, the system falls back to a simulated payment flow.
 
 All seeded accounts use the password: **`password`**
 
+> ⚠️ **IMPORTANT:** Change the admin password immediately after seeding. Default passwords are for development only.
+
 | Role     | Email                              | Description           |
 |---------|-------------------------------------|-----------------------|
 | Admin    | `admin@punjabpower.gov.in`         | Super Administrator   |

@@ -278,7 +278,6 @@ class FarmerController extends Controller
                     return back()->withErrors(['payment' => 'Payment verification failed.']);
                 }
             } else {
-                sleep(1);
                 $txnId = 'TXN-' . now()->format('YmdHis') . '-' . $bill->id;
             }
 

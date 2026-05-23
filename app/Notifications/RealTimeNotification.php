@@ -3,8 +3,6 @@
 namespace App\Notifications;
 
 use Illuminate\Bus\Queueable;
-use Illuminate\Contracts\Queue\ShouldQueue;
-use Illuminate\Notifications\Messages\BroadcastMessage;
 use Illuminate\Notifications\Notification;
 
 class RealTimeNotification extends Notification
@@ -34,7 +32,7 @@ class RealTimeNotification extends Notification
      */
     public function via(object $notifiable): array
     {
-        return ['database', 'broadcast'];
+        return ['database'];
     }
 
     /**
@@ -50,20 +48,5 @@ class RealTimeNotification extends Notification
             'url' => $this->url,
             'icon' => $this->icon,
         ];
-    }
-
-    /**
-     * Get the broadcastable representation of the notification.
-     */
-    public function toBroadcast(object $notifiable): BroadcastMessage
-    {
-        return new BroadcastMessage([
-            'id' => $this->id,
-            'title' => $this->title,
-            'message' => $this->message,
-            'url' => $this->url,
-            'icon' => $this->icon,
-            'created_at' => now()->toISOString(),
-        ]);
     }
 }

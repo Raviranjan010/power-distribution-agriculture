@@ -170,11 +170,16 @@ class AdminController extends Controller
     public function toggleUserStatus($id)
     {
         $user = User::findOrFail($id);
+        if ($user->id === Auth::id()) {
+            return back()->withErrors(['error' => 'You cannot deactivate your own account.']);
+        }
         $user->update(['is_active' => !$user->is_active]);
         AuditLog::create([
             'user_id' => Auth::id(), 'action' => $user->is_active ? 'activated' : 'deactivated',
             'model_type' => 'User', 'model_id' => $user->id, 'ip_address' => request()->ip(),
         ]);
+        Cache::forget('stat.total_farmers');
+        Cache::forget('stat.zones_overview');
         return back()->with('success', 'User ' . $user->name . ' ' . ($user->is_active ? 'activated' : 'deactivated'));
     }
 
@@ -208,6 +213,8 @@ class AdminController extends Controller
             'ip_address' => request()->ip(),
         ]);
 
+        Cache::forget('stat.total_farmers');
+        Cache::forget('stat.zones_overview');
         return back()->with('success', 'User ' . $user->name . ' created successfully.');
     }
 
@@ -229,6 +236,7 @@ class AdminController extends Controller
             'user_id' => Auth::id(), 'action' => 'created_tariff', 'model_type' => 'TariffCategory',
             'new_values' => $request->all(), 'ip_address' => request()->ip(),
         ]);
+        Cache::forget('stat.admin_charts');
         return back()->with('success', 'Tariff created.');
     }
 
@@ -246,6 +254,7 @@ class AdminController extends Controller
             'user_id' => Auth::id(), 'action' => 'updated_tariff', 'model_type' => 'TariffCategory',
             'model_id' => $id, 'old_values' => $oldValues, 'new_values' => $request->all(), 'ip_address' => request()->ip(),
         ]);
+        Cache::forget('stat.admin_charts');
         return back()->with('success', 'Tariff updated.');
     }
 
@@ -257,6 +266,7 @@ class AdminController extends Controller
             'user_id' => Auth::id(), 'action' => 'deactivated_tariff', 'model_type' => 'TariffCategory',
             'model_id' => $id, 'ip_address' => request()->ip(),
         ]);
+        Cache::forget('stat.admin_charts');
         return back()->with('success', 'Tariff deactivated.');
     }
 
@@ -277,6 +287,7 @@ class AdminController extends Controller
         SubsidyScheme::create($request->only([
             'scheme_name', 'description', 'discount_percentage', 'max_units_covered', 'start_date', 'end_date'
         ]));
+        Cache::forget('stat.admin_charts');
         return back()->with('success', 'Scheme created.');
     }
 
@@ -292,6 +303,7 @@ class AdminController extends Controller
         $scheme->update($request->only([
             'scheme_name', 'description', 'discount_percentage', 'max_units_covered', 'start_date', 'end_date'
         ]));
+        Cache::forget('stat.admin_charts');
         return back()->with('success', 'Scheme updated.');
     }
 
@@ -299,6 +311,7 @@ class AdminController extends Controller
     {
         $scheme = SubsidyScheme::findOrFail($id);
         $scheme->update(['is_active' => false]);
+        Cache::forget('stat.admin_charts');
         return back()->with('success', 'Scheme deactivated.');
     }
 
@@ -356,6 +369,10 @@ class AdminController extends Controller
     public function deleteZone($id)
     {
         $zone = Zone::findOrFail($id);
+        $assignedUsers = User::where('zone_id', $zone->id)->count();
+        if ($assignedUsers > 0) {
+            return back()->withErrors(['error' => 'Cannot delete zone with ' . $assignedUsers . ' assigned users. Reassign them first.']);
+        }
         $zone->delete();
 
         return back()->with('success', 'Zone deleted successfully!');

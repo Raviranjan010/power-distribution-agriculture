@@ -8,6 +8,7 @@
 .env
 .env.backup
 .env.production
+.env.*
 .phpunit.result.cache
 Homestead.json
 Homestead.yaml
@@ -17,3 +18,4 @@ yarn-error.log
 /.fleet
 /.idea
 /.vscode
+vite.config.js.timestamp-*
