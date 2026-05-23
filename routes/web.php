@@ -95,6 +95,7 @@ Route::middleware(['auth', 'role:farmer'])->prefix('farmer')->name('farmer.')->g
     Route::get('/help', [FarmerController::class, 'help'])->name('help');
     Route::get('/profile', [FarmerController::class, 'profile'])->name('profile');
     Route::post('/profile', [FarmerController::class, 'updateProfile'])->name('profile.update');
+    Route::post('/outage-report', [FarmerController::class, 'reportOutage'])->name('outage.report');
 });
 
 Route::middleware(['auth', 'role:lineman'])->prefix('lineman')->name('lineman.')->group(function () {
@@ -108,3 +109,4 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/notifications/read-all', [NotificationController::class, 'markAllAsRead'])->name('notifications.read_all');
     Route::get('/notifications/{id}/read', [NotificationController::class, 'read'])->name('notifications.read');
 });
+

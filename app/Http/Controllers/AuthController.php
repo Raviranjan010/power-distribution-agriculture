@@ -26,13 +26,21 @@ class AuthController extends Controller
         ]);
 
         if (Auth::attempt($credentials)) {
-            $request->session()->regenerate();
             $user = Auth::user();
 
             if (!$user->is_active) {
                 Auth::logout();
                 return back()->withErrors(['email' => 'Your account has been deactivated.']);
             }
+
+            // Check for 2FA for admin and sdo roles
+            if (in_array($user->role, ['admin', 'sdo']) && $user->two_factor_secret && $user->two_factor_confirmed_at) {
+                $request->session()->put('two_factor_pending_user_id', $user->id);
+                Auth::logout(); // Log them out immediately until 2FA challenge succeeds
+                return redirect()->route('auth.two_factor.show');
+            }
+
+            $request->session()->regenerate();
 
             return match ($user->role) {
                 'admin' => redirect()->route('admin.dashboard'),

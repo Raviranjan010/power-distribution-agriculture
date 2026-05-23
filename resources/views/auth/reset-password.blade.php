@@ -4,27 +4,20 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Reset Password | Distribution of Electric Power for Agriculture</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Vite for Local Tailwind CSS -->
+    @vite(['resources/css/app.css', 'resources/js/app.js'])
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    colors: {
-                        theme: { bg: '#f8f4e9', panel: '#fffdf6', border: '#d8ccad', text: '#667060', heading: '#1e241d', accent: '#234817', hover: '#17310f' }
-                    },
-                    fontFamily: { sans: ['Inter', 'sans-serif'] }
-                }
-            }
-        }
-    </script>
     <style>
         @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
         body { font-family: 'Inter', sans-serif; color: #667060; background: radial-gradient(circle at 16% 0%, rgba(216, 189, 120, 0.25), transparent 28rem), linear-gradient(135deg, #f8f4e9, #eee5d3); } input, select, textarea { background: rgba(255,253,246,0.9) !important; color: #1e241d !important; border-color: rgba(35,72,23,0.18) !important; } input:focus, select:focus, textarea:focus { border-color: #234817 !important; box-shadow: 0 0 0 3px rgba(35,72,23,0.12); } .bg-theme-panel { background: rgba(255,253,246,0.78) !important; box-shadow: inset 0 1px 0 rgba(255,255,255,0.78), 0 24px 70px rgba(56,48,33,0.14); backdrop-filter: blur(18px); } .rounded-xl { border-radius: 1.5rem; } .bg-theme-panel { transition: transform 180ms ease, box-shadow 180ms ease; } .bg-theme-panel:hover { transform: translateY(-3px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.82), 0 30px 82px rgba(56,48,33,0.18) !important; } button, a { transition: transform 180ms ease, background-color 180ms ease, color 180ms ease; } button:hover { transform: translateY(-2px); }
     </style>
 </head>
-<body class="text-theme-text antialiased min-h-screen flex items-center justify-center">
+<body class="text-theme-text antialiased min-h-screen flex items-center justify-center relative">
+
+<!-- Floating Language Selector (Top-Right) -->
+<div style="position: absolute; top: 24px; right: 24px; z-index: 1000;">
+    @include('partials.language-selector')
+</div>
 
 <div class="w-full max-w-md px-6">
     <div class="text-center mb-8">

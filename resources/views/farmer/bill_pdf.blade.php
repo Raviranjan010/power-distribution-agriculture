@@ -155,10 +155,32 @@
                 <td>₹{{ number_format($bill->taxes, 2) }}</td>
             </tr>
             @if($bill->subsidy_amount > 0)
-            <tr class="deduction">
-                <td>Government Subsidy Deduction</td>
-                <td>− ₹{{ number_format($bill->subsidy_amount, 2) }}</td>
-            </tr>
+                <tr class="deduction" style="font-weight: bold; background-color: #f0fdf4;">
+                    <td>Government Subsidy Deduction (Total)</td>
+                    <td>− ₹{{ number_format($bill->subsidy_amount, 2) }}</td>
+                </tr>
+                @php
+                    $appliedSubsidies = \App\Models\ConsumerSubsidy::where('consumer_id', $bill->connection->consumer_id)
+                        ->where('status', 'approved')
+                        ->whereHas('scheme', fn($q) => $q->where('is_active', true))
+                        ->with('scheme')
+                        ->get();
+                @endphp
+                @foreach($appliedSubsidies as $cs)
+                    @php
+                        $scheme = $cs->scheme;
+                        $coveredUnits = min($bill->units_consumed, $scheme->max_units_covered);
+                        $schemeSubsidy = $coveredUnits * $bill->rate_per_unit * ($scheme->discount_percentage / 100);
+                    @endphp
+                    @if($schemeSubsidy > 0)
+                        <tr class="deduction">
+                            <td style="font-size: 10px; padding-left: 20px; color: #166534; font-style: italic;">
+                                ↳ Applied Scheme: {{ $scheme->scheme_name }} ({{ number_format($scheme->discount_percentage, 0) }}% off up to {{ number_format($scheme->max_units_covered, 0) }} kWh)
+                            </td>
+                            <td style="font-size: 10px; color: #166534; font-style: italic;">− ₹{{ number_format($schemeSubsidy, 2) }}</td>
+                        </tr>
+                    @endif
+                @endforeach
             @endif
             <tr class="total">
                 <td>NET PAYABLE AMOUNT</td>

@@ -18,6 +18,9 @@ class Kernel extends ConsoleKernel
                 ->where('due_date', '<', now()->startOfDay())
                 ->update(['status' => 'overdue']);
         })->daily()->description('Mark overdue bills');
+
+        // Schedule automated weekly SMS reminders (checks daily)
+        $schedule->command('bills:send-reminders')->daily();
     }
 
     /**

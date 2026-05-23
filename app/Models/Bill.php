@@ -10,10 +10,11 @@ class Bill extends Model
         'bill_number', 'connection_id', 'meter_reading_id', 'billing_month', 
         'billing_year', 'units_consumed', 'rate_per_unit', 'energy_charges', 
         'fixed_charges', 'taxes', 'subsidy_amount', 'net_payable', 'due_date', 
-        'status', 'generated_by'
+        'status', 'generated_by', 'sms_sent_at'
     ];
     protected $casts = [
-        'due_date' => 'date'
+        'due_date' => 'date',
+        'sms_sent_at' => 'datetime'
     ];
 
     public function connection() { return $this->belongsTo(Connection::class); }

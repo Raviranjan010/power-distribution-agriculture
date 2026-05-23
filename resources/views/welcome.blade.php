@@ -830,6 +830,7 @@
             </div>
 
             <div class="nav-actions">
+                @include('partials.language-selector')
                 <a class="btn btn-plain" href="{{ route('login') }}"><i class="fa-regular fa-user"></i> Sign In</a>
                 <a class="btn btn-primary" href="{{ route('register') }}">Apply Now <i class="fa-solid fa-arrow-right"></i></a>
             </div>

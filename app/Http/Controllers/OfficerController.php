@@ -183,6 +183,35 @@ class OfficerController extends Controller
                 $coveredUnits = min($reading->units_consumed, $approvedSubsidy->scheme->max_units_covered);
                 $subsidyAmount = $coveredUnits * $t->rate_per_unit
                                  * ($approvedSubsidy->scheme->discount_percentage / 100);
+            } elseif ($t->applicable_to === 'agricultural') {
+                // Auto-apply agricultural subsidy if connection is agricultural and user has no approved subsidy
+                $autoScheme = \App\Models\SubsidyScheme::where('is_active', true)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now())
+                    ->where(function($q) {
+                        $q->where('scheme_name', 'like', '%Agriculture%')
+                          ->orWhere('scheme_name', 'like', '%Solar%')
+                          ->orWhere('scheme_name', 'like', '%KUSUM%')
+                          ->orWhere('eligibility_criteria', 'like', '%agricultural%')
+                          ->orWhere('eligibility_criteria', 'like', '%farmer%');
+                    })
+                    ->orderByDesc('discount_percentage')
+                    ->first();
+
+                if ($autoScheme) {
+                    $coveredUnits = min($reading->units_consumed, $autoScheme->max_units_covered);
+                    $subsidyAmount = $coveredUnits * $t->rate_per_unit * ($autoScheme->discount_percentage / 100);
+
+                    // Auto-record the connection's claim in consumer_subsidies table for persistent tracking
+                    ConsumerSubsidy::create([
+                        'consumer_id' => $conn->consumer_id,
+                        'scheme_id' => $autoScheme->id,
+                        'status' => 'approved',
+                        'approved_by' => $user->id,
+                        'approved_at' => now(),
+                        'remarks' => 'Auto-applied during billing based on agricultural tariff category eligibility.',
+                    ]);
+                }
             }
 
             $bill = Bill::create([

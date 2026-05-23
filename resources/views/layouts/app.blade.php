@@ -420,25 +420,30 @@
                     @endif
                 </div>
 
-                <!-- Notification Bell -->
-                <div class="relative mr-4">
-                    <button id="notificationBell" class="relative p-2 text-theme-text hover:text-theme-heading transition-all duration-200 focus:outline-none rounded-lg hover:bg-theme-border/20">
-                        <i class="fa-solid fa-bell text-lg"></i>
-                        <span id="notificationBadge" class="hidden absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white leading-none">
-                            0
-                        </span>
-                    </button>
-                    
-                    <!-- Dropdown Panel -->
-                    <div id="notificationDropdown" class="hidden absolute right-0 top-12 w-80 bg-theme-panel border border-theme-border rounded-xl shadow-2xl z-50 overflow-hidden backdrop-blur-md">
-                        <div class="p-3.5 border-b border-theme-border flex justify-between items-center bg-theme-bg/40">
-                            <span class="text-xs font-bold text-theme-heading uppercase tracking-wider">Alerts</span>
-                            <button id="markAllReadBtn" class="text-[10px] text-theme-accent hover:text-theme-hover hover:underline font-bold focus:outline-none transition-colors">Mark all read</button>
-                        </div>
-                        <div id="notificationList" class="max-h-72 overflow-y-auto divide-y divide-theme-border/40">
-                            <div class="p-6 text-center text-xs text-theme-text opacity-70">
-                                <i class="fa-solid fa-bell-slash mb-2 text-lg block opacity-50"></i>
-                                No new notifications
+                <!-- Actions (Language Selector & Notification Bell) -->
+                <div class="flex items-center gap-3 ml-auto">
+                    @include('partials.language-selector')
+
+                    <!-- Notification Bell -->
+                    <div class="relative mr-2">
+                        <button id="notificationBell" class="relative p-2 text-theme-text hover:text-theme-heading transition-all duration-200 focus:outline-none rounded-lg hover:bg-theme-border/20">
+                            <i class="fa-solid fa-bell text-lg"></i>
+                            <span id="notificationBadge" class="hidden absolute top-1.5 right-1.5 min-w-[16px] h-4 px-1 flex items-center justify-center rounded-full bg-rose-500 text-[8px] font-bold text-white leading-none">
+                                0
+                            </span>
+                        </button>
+                        
+                        <!-- Dropdown Panel -->
+                        <div id="notificationDropdown" class="hidden absolute right-0 top-12 w-80 bg-theme-panel border border-theme-border rounded-xl shadow-2xl z-50 overflow-hidden backdrop-blur-md">
+                            <div class="p-3.5 border-b border-theme-border flex justify-between items-center bg-theme-bg/40">
+                                <span class="text-xs font-bold text-theme-heading uppercase tracking-wider">Alerts</span>
+                                <button id="markAllReadBtn" class="text-[10px] text-theme-accent hover:text-theme-hover hover:underline font-bold focus:outline-none transition-colors">Mark all read</button>
+                            </div>
+                            <div id="notificationList" class="max-h-72 overflow-y-auto divide-y divide-theme-border/40">
+                                <div class="p-6 text-center text-xs text-theme-text opacity-70">
+                                    <i class="fa-solid fa-bell-slash mb-2 text-lg block opacity-50"></i>
+                                    No new notifications
+                                </div>
                             </div>
                         </div>
                     </div>

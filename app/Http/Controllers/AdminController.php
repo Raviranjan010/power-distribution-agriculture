@@ -15,6 +15,7 @@ use App\Models\SubsidyScheme;
 use App\Models\ConsumerSubsidy;
 use App\Models\Zone;
 use App\Models\AuditLog;
+use App\Models\Payment;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\Cache;
 
@@ -65,9 +66,97 @@ class AdminController extends Controller
         });
         $resolutionRate = $complaintStats['resolutionRate'];
 
+        $revenuePerZone = Cache::remember('stat.revenue_per_zone', 300, function() {
+            return Zone::all()->map(function($zone) {
+                $revenue = Bill::where('status', 'paid')
+                    ->whereHas('connection.consumer', fn($q) => $q->where('zone_id', $zone->id))
+                    ->sum('net_payable');
+                return [
+                    'zone' => $zone->name,
+                    'revenue' => (float)$revenue
+                ];
+            });
+        });
+
+        $resolutionTimeTrend = Cache::remember('stat.resolution_time_trend', 300, function() {
+            $data = [];
+            for ($i = 5; $i >= 0; $i--) {
+                $d = Carbon::now()->subMonths($i);
+                $complaints = Complaint::where('status', 'resolved')
+                    ->whereMonth('resolved_at', $d->month)
+                    ->whereYear('resolved_at', $d->year)
+                    ->get();
+                
+                $avgHours = 0;
+                if ($complaints->count() > 0) {
+                    $totalHours = 0;
+                    foreach ($complaints as $c) {
+                        $totalHours += Carbon::parse($c->filed_at)->diffInHours(Carbon::parse($c->resolved_at));
+                    }
+                    $avgHours = round($totalHours / $complaints->count(), 1);
+                }
+                $data[] = [
+                    'label' => $d->format('M Y'),
+                    'avg_hours' => $avgHours
+                ];
+            }
+            return $data;
+        });
+
+        $linemanPerformance = Cache::remember('stat.lineman_performance', 300, function() {
+            $linemen = User::where('role', 'lineman')->get();
+            return $linemen->map(function($lm) {
+                $totalReadings = MeterReading::where('lineman_id', $lm->id)->count();
+                $verifiedReadings = MeterReading::where('lineman_id', $lm->id)->where('is_verified', true)->count();
+                $readingsThisMonth = MeterReading::where('lineman_id', $lm->id)
+                    ->whereMonth('reading_date', now()->month)
+                    ->whereYear('reading_date', now()->year)
+                    ->count();
+                
+                return [
+                    'name' => $lm->name,
+                    'readings_this_month' => $readingsThisMonth,
+                    'verification_rate' => $totalReadings > 0 ? round(($verifiedReadings / $totalReadings) * 100, 1) : 0.0
+                ];
+            });
+        });
+
+        $agingBuckets = Cache::remember('stat.aging_buckets', 300, function() {
+            $now = Carbon::now();
+            $bills = Bill::whereIn('status', ['pending', 'overdue'])->get();
+
+            $bucket1 = 0; // 0-30 days
+            $bucket2 = 0; // 30-60 days
+            $bucket3 = 0; // 60-90 days
+            $bucket4 = 0; // 90d+
+
+            foreach ($bills as $b) {
+                $dueDate = Carbon::parse($b->due_date);
+                if ($dueDate->isPast()) {
+                    $daysPast = $dueDate->diffInDays($now);
+                    if ($daysPast <= 30) {
+                        $bucket1 += $b->net_payable;
+                    } elseif ($daysPast <= 60) {
+                        $bucket2 += $b->net_payable;
+                    } elseif ($daysPast <= 90) {
+                        $bucket3 += $b->net_payable;
+                    } else {
+                        $bucket4 += $b->net_payable;
+                    }
+                }
+            }
+            return [
+                '0_30' => (float)$bucket1,
+                '30_60' => (float)$bucket2,
+                '60_90' => (float)$bucket3,
+                '90_plus' => (float)$bucket4
+            ];
+        });
+
         return view('admin.dashboard', compact(
             'totalFarmers', 'totalActiveConnections', 'pendingComplaints', 'totalRevenueThisMonth',
-            'revenueLabels', 'revenueData', 'connectionLabels', 'connectionData', 'zones', 'resolutionRate'
+            'revenueLabels', 'revenueData', 'connectionLabels', 'connectionData', 'zones', 'resolutionRate',
+            'revenuePerZone', 'resolutionTimeTrend', 'linemanPerformance', 'agingBuckets'
         ));
     }
 
@@ -292,11 +381,116 @@ class AdminController extends Controller
         $data = [];
         $headers = [];
 
+        if ($type === 'analytics_pdf') {
+            $user = Auth::user();
+            $adminName = $user->name;
+
+            $totalFarmers = Cache::remember('stat.total_farmers', 300, fn() => User::where('role', 'farmer')->count());
+            $totalActiveConnections = Cache::remember('stat.active_connections', 300, fn() => Connection::where('status', 'active')->count());
+            $pendingComplaints = Cache::remember('stat.pending_complaints', 300, fn() => Complaint::whereNotIn('status', ['resolved', 'closed'])->count());
+            $totalRevenueThisMonth = Cache::remember('stat.revenue_this_month', 300, fn() => Bill::where('status', 'paid')
+                ->where('billing_month', now()->month)->where('billing_year', now()->year)->sum('net_payable'));
+
+            $revenuePerZone = Cache::remember('stat.revenue_per_zone', 300, function() {
+                return Zone::all()->map(function($zone) {
+                    $revenue = Bill::where('status', 'paid')
+                        ->whereHas('connection.consumer', fn($q) => $q->where('zone_id', $zone->id))
+                        ->sum('net_payable');
+                    return [
+                        'zone' => $zone->name,
+                        'revenue' => (float)$revenue
+                    ];
+                });
+            });
+
+            $resolutionTimeTrend = Cache::remember('stat.resolution_time_trend', 300, function() {
+                $data = [];
+                for ($i = 5; $i >= 0; $i--) {
+                    $d = Carbon::now()->subMonths($i);
+                    $complaints = Complaint::where('status', 'resolved')
+                        ->whereMonth('resolved_at', $d->month)
+                        ->whereYear('resolved_at', $d->year)
+                        ->get();
+                    
+                    $avgHours = 0;
+                    if ($complaints->count() > 0) {
+                        $totalHours = 0;
+                        foreach ($complaints as $c) {
+                            $totalHours += Carbon::parse($c->filed_at)->diffInHours(Carbon::parse($c->resolved_at));
+                        }
+                        $avgHours = round($totalHours / $complaints->count(), 1);
+                    }
+                    $data[] = [
+                        'label' => $d->format('M Y'),
+                        'avg_hours' => $avgHours
+                    ];
+                }
+                return $data;
+            });
+
+            $linemanPerformance = Cache::remember('stat.lineman_performance', 300, function() {
+                $linemen = User::where('role', 'lineman')->get();
+                return $linemen->map(function($lm) {
+                    $totalReadings = MeterReading::where('lineman_id', $lm->id)->count();
+                    $verifiedReadings = MeterReading::where('lineman_id', $lm->id)->where('is_verified', true)->count();
+                    $readingsThisMonth = MeterReading::where('lineman_id', $lm->id)
+                        ->whereMonth('reading_date', now()->month)
+                        ->whereYear('reading_date', now()->year)
+                        ->count();
+                    
+                    return [
+                        'name' => $lm->name,
+                        'readings_this_month' => $readingsThisMonth,
+                        'verification_rate' => $totalReadings > 0 ? round(($verifiedReadings / $totalReadings) * 100, 1) : 0.0
+                    ];
+                });
+            });
+
+            $agingBuckets = Cache::remember('stat.aging_buckets', 300, function() {
+                $now = Carbon::now();
+                $bills = Bill::whereIn('status', ['pending', 'overdue'])->get();
+
+                $bucket1 = 0; // 0-30 days
+                $bucket2 = 0; // 30-60 days
+                $bucket3 = 0; // 60-90 days
+                $bucket4 = 0; // 90d+
+
+                foreach ($bills as $b) {
+                    $dueDate = Carbon::parse($b->due_date);
+                    if ($dueDate->isPast()) {
+                        $daysPast = $dueDate->diffInDays($now);
+                        if ($daysPast <= 30) {
+                            $bucket1 += $b->net_payable;
+                        } elseif ($daysPast <= 60) {
+                            $bucket2 += $b->net_payable;
+                        } elseif ($daysPast <= 90) {
+                            $bucket3 += $b->net_payable;
+                        } else {
+                            $bucket4 += $b->net_payable;
+                        }
+                    }
+                }
+                return [
+                    '0_30' => (float)$bucket1,
+                    '30_60' => (float)$bucket2,
+                    '60_90' => (float)$bucket3,
+                    '90_plus' => (float)$bucket4
+                ];
+            });
+
+            $pdf = \Barryvdh\DomPDF\Facade\Pdf::loadView('admin.analytics_pdf', compact(
+                'adminName', 'totalFarmers', 'totalActiveConnections', 'pendingComplaints', 'totalRevenueThisMonth',
+                'revenuePerZone', 'resolutionTimeTrend', 'linemanPerformance', 'agingBuckets'
+            ));
+
+            return $pdf->download('executive-analytics-report-' . now()->format('Y-m-d') . '.pdf');
+        }
+
         if ($type === 'farmers') {
             $data = User::where('role', 'farmer')->get(['name', 'email', 'phone', 'village', 'district', 'farmer_id_number']);
             $headers = ['Name', 'Email', 'Phone', 'Village', 'District', 'Farmer ID'];
         } elseif ($type === 'connections') {
-            $data = Connection::with('consumer')->get()->map(function($c) {
+            $data = Connection::with('consumer')->get()->map(function(Connection $c) {
                 return [
                     'connection_number' => $c->connection_number,
                     'farmer_name' => $c->consumer->name ?? '',
@@ -309,7 +503,7 @@ class AdminController extends Controller
         } elseif ($type === 'bills') {
             $cm = now()->month;
             $cy = now()->year;
-            $data = Bill::with('connection.consumer')->where('billing_month', $cm)->where('billing_year', $cy)->get()->map(function($b) {
+            $data = Bill::with('connection.consumer')->where('billing_month', $cm)->where('billing_year', $cy)->get()->map(function(Bill $b) {
                 return [
                     'bill_number' => $b->bill_number,
                     'farmer_name' => $b->connection->consumer->name ?? '',
@@ -320,7 +514,7 @@ class AdminController extends Controller
             });
             $headers = ['Bill Number', 'Farmer Name', 'Units', 'Amount', 'Status'];
         } elseif ($type === 'payments') {
-            $data = \App\Models\Payment::with('bill.connection.consumer')->get()->map(function($p) {
+            $data = Payment::with('bill.connection.consumer')->get()->map(function(Payment $p) {
                 return [
                     'transaction_id' => $p->transaction_id,
                     'farmer_name' => $p->bill->connection->consumer->name ?? '',

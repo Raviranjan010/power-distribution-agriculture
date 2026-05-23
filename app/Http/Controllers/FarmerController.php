@@ -13,6 +13,7 @@ use App\Models\Payment;
 use App\Models\ConsumerSubsidy;
 use App\Models\SubsidyScheme;
 use App\Models\PowerSchedule;
+use App\Models\OutageReport;
 use Carbon\Carbon;
 use Barryvdh\DomPDF\Facade\Pdf;
 
@@ -62,10 +63,76 @@ class FarmerController extends Controller
         $schedules = PowerSchedule::where('zone_id', $user->zone_id)
             ->where('scheduled_date', '>=', today())->orderBy('scheduled_date')->get();
 
+        // Smart Bill Predictions Widget Calculations
+        $predictions = [];
+        foreach ($connections as $conn) {
+            if ($conn->status !== 'active') continue;
+            
+            $t = $conn->tariffCategory;
+            if (!$t) continue;
+
+            $historicalReadings = MeterReading::where('connection_id', $conn->id)
+                ->where('reading_date', '<', Carbon::now()->startOfMonth())
+                ->orderByDesc('reading_date')
+                ->limit(6)
+                ->get();
+
+            $avgUnits = $historicalReadings->count() > 0 ? (float)$historicalReadings->avg('units_consumed') : 150.0;
+
+            $currentReading = MeterReading::where('connection_id', $conn->id)
+                ->whereMonth('reading_date', $currentMonth)
+                ->whereYear('reading_date', $currentYear)
+                ->first();
+            
+            $currentUnits = $currentReading ? (float)$currentReading->units_consumed : 0.0;
+
+            $daysElapsed = Carbon::now()->day;
+            $totalDays = Carbon::now()->daysInMonth;
+            
+            // Extrapolate or fall back to history
+            $projectedUnits = $currentUnits > 0 ? ($currentUnits / $daysElapsed) * $totalDays : $avgUnits;
+
+            $ec = $projectedUnits * $t->rate_per_unit;
+            $fc = $conn->sanctioned_load_kw * $t->fixed_charge_per_kw;
+            $tax = ($ec + $fc) * 0.05;
+
+            $approvedSubsidy = ConsumerSubsidy::where('consumer_id', $user->id)
+                ->where('status', 'approved')
+                ->whereHas('scheme', fn($q) => $q->where('is_active', true)
+                    ->where('start_date', '<=', now())
+                    ->where('end_date', '>=', now()))
+                ->with('scheme')->first();
+
+            $subsidyAmount = 0;
+            if ($approvedSubsidy) {
+                $coveredUnits = min($projectedUnits, $approvedSubsidy->scheme->max_units_covered);
+                $subsidyAmount = $coveredUnits * $t->rate_per_unit * ($approvedSubsidy->scheme->discount_percentage / 100);
+            }
+
+            $netProjected = max(0, $ec + $fc + $tax - $subsidyAmount);
+
+            $isTrendingHigh = ($projectedUnits >= $avgUnits * 1.2);
+            $percentIncrease = $avgUnits > 0 ? (($projectedUnits - $avgUnits) / $avgUnits) * 100 : 0;
+
+            $gaugePercentage = min(100, ($projectedUnits / max(1, $avgUnits * 1.5)) * 100);
+
+            $predictions[] = [
+                'connection_number' => $conn->connection_number,
+                'field_name' => $conn->field_name ?? $conn->connection_number,
+                'avg_units' => $avgUnits,
+                'current_units' => $currentUnits,
+                'projected_units' => $projectedUnits,
+                'projected_bill' => $netProjected,
+                'is_trending_high' => $isTrendingHigh,
+                'percent_increase' => $percentIncrease,
+                'gauge_percentage' => $gaugePercentage
+            ];
+        }
+
         return view('farmer.dashboard', compact(
             'activeConnections', 'pendingConnections', 'unitsThisMonth', 'activeSubsidies', 'latestBill',
             'pendingBillsCount', 'connections', 'complaints', 'usageLabels', 'usageData',
-            'connectionUsage', 'subsidies', 'previousMonthUnits', 'schedules'
+            'connectionUsage', 'subsidies', 'previousMonthUnits', 'schedules', 'predictions'
         ));
     }
 
@@ -394,5 +461,105 @@ class FarmerController extends Controller
         $user->save();
 
         return back()->with('success', 'Profile updated successfully.');
+    }
+
+    /**
+     * Report power outage (crowd-sourced).
+     */
+    public function reportOutage(Request $request)
+    {
+        $user = Auth::user();
+        $zoneId = $user->zone_id;
+
+        if (!$zoneId) {
+            return back()->withErrors(['outage' => 'Your account is not assigned to a power distribution zone. Please contact support.']);
+        }
+
+        // 1. Avoid spam (limit 1 report per farmer every 30 minutes)
+        $recentReport = OutageReport::where('farmer_id', $user->id)
+            ->where('reported_at', '>=', now()->subMinutes(30))
+            ->exists();
+
+        if ($recentReport) {
+            return back()->withErrors(['outage' => 'You have already reported a power outage recently. We are actively tracking reports in your area!']);
+        }
+
+        // 2. Log Outage Report
+        OutageReport::create([
+            'farmer_id' => $user->id,
+            'zone_id' => $zoneId,
+            'reported_at' => now(),
+        ]);
+
+        // 3. Count reports in this zone within the last 30 minutes
+        $reportCount = OutageReport::where('zone_id', $zoneId)
+            ->where('reported_at', '>=', now()->subMinutes(30))
+            ->count();
+
+        $autoCreated = false;
+        $grvNumber = null;
+
+        if ($reportCount >= 3) {
+            // Check if there is already an active, unresolved crowd-sourced grievance in this zone
+            $activeGrievance = Complaint::whereHas('consumer', fn($q) => $q->where('zone_id', $zoneId))
+                ->where('complaint_type', 'no_supply')
+                ->where('priority', 'high')
+                ->whereIn('status', ['filed', 'assigned'])
+                ->where('description', 'like', '%[CROWD-SOURCED AUTOMATED OUTAGE REPORT]%')
+                ->first();
+
+            if (!$activeGrievance) {
+                // Get the farmer's connection to attach to the grievance (default table constraint requirement)
+                $connection = Connection::where('consumer_id', $user->id)
+                    ->where('status', 'approved')
+                    ->first() ?? Connection::where('consumer_id', $user->id)->first();
+
+                // Auto-create high-priority complaint in a secure transaction
+                $grvNumber = DB::transaction(function() use ($user, $connection) {
+                    $year = date('Y');
+                    $last = Complaint::lockForUpdate()
+                        ->where('grv_number', 'like', "GRV-{$year}-%")
+                        ->orderByDesc('id')->first();
+                    $nextNum = 1;
+                    if ($last && preg_match('/GRV-\d{4}-(\d+)/', $last->grv_number, $m)) {
+                        $nextNum = intval($m[1]) + 1;
+                    }
+                    $grv = "GRV-{$year}-" . str_pad($nextNum, 4, '0', STR_PAD_LEFT);
+
+                    Complaint::create([
+                        'grv_number' => $grv,
+                        'consumer_id' => $user->id,
+                        'connection_id' => $connection ? $connection->id : null,
+                        'complaint_type' => 'no_supply',
+                        'description' => '[CROWD-SOURCED AUTOMATED OUTAGE REPORT] Critical: Multiple farmers (3+) in this zone have reported a power outage within the last 30 minutes. Automated high-priority grievance generated.',
+                        'priority' => 'high',
+                        'status' => 'filed',
+                        'filed_at' => now(),
+                    ]);
+
+                    return $grv;
+                });
+
+                $autoCreated = true;
+                $zoneName = $user->zone->name ?? 'Your Zone';
+
+                // Alert the SDO (officers) in the same zone
+                $officers = \App\Models\User::where('role', 'sdo')->where('zone_id', $zoneId)->get();
+                foreach ($officers as $officer) {
+                    $officer->notify(new \App\Notifications\RealTimeNotification(
+                        '⚠️ Outage Alert!',
+                        "Multiple farmers in Zone {$zoneName} have reported an outage. Priority ticket filed: {$grvNumber}",
+                        route('officer.dashboard'),
+                        'fa-solid fa-triangle-exclamation'
+                    ));
+                }
+            }
+        }
+
+        if ($autoCreated) {
+            return back()->with('success', 'Outage reported! Multiple farmers in your zone have reported this outage. A high-priority alert has been automatically sent to the SDO SDO (Ticket: ' . $grvNumber . ').');
+        }
+
+        return back()->with('success', 'Outage reported successfully. We are tracking power reports in your area (Total reports: ' . $reportCount . '/3 needed for auto-grievance).');
     }
 }

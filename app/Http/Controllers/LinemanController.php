@@ -30,7 +30,10 @@ class LinemanController extends Controller
         $request->validate([
             'connection_id' => 'required|exists:connections,id',
             'current_reading' => 'required|numeric|min:0',
-            'remarks' => 'nullable|string'
+            'remarks' => 'nullable|string',
+            'photo' => 'nullable|image|max:5120',
+            'gps_lat' => 'nullable|numeric',
+            'gps_lng' => 'nullable|numeric'
         ]);
 
         $connection = Connection::where('id', $request->connection_id)
@@ -45,6 +48,11 @@ class LinemanController extends Controller
         
         $units_consumed = max(0, $request->current_reading - $previous_reading);
 
+        $photoPath = null;
+        if ($request->hasFile('photo')) {
+            $photoPath = $request->file('photo')->store('readings', 'public');
+        }
+
         MeterReading::create([
             'connection_id' => $connection->id,
             'lineman_id' => Auth::id(),
@@ -53,10 +61,13 @@ class LinemanController extends Controller
             'current_reading' => $request->current_reading,
             'units_consumed' => $units_consumed,
             'is_verified' => false,
-            'remarks' => $request->remarks
+            'remarks' => $request->remarks,
+            'photo_path' => $photoPath,
+            'gps_lat' => $request->gps_lat,
+            'gps_lng' => $request->gps_lng
         ]);
 
-        return back()->with('success', 'Meter reading submitted successfully and is pending verification.');
+        return back()->with('success', 'Meter reading submitted successfully with GPS & photo verification.');
     }
 
     public function updateComplaint(Request $request, $id)

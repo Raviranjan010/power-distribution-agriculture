@@ -38,6 +38,28 @@
         @endif
     @endif
 
+    {{-- Crowd-Sourced Outage Reporting Card --}}
+    <div class="mb-8 bg-rose-500/10 border border-rose-500/30 rounded-xl p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 backdrop-blur-md">
+        <div class="flex items-start gap-4">
+            <div class="w-10 h-10 rounded-lg bg-rose-500/20 text-rose-400 border border-rose-500/20 flex items-center justify-center flex-shrink-0 text-lg animate-pulse">
+                <i class="fa-solid fa-plug-circle-xmark"></i>
+            </div>
+            <div>
+                <h4 class="text-rose-400 font-bold text-sm">Facing a Power Outage?</h4>
+                <p class="text-xs text-theme-text mt-0.5 max-w-xl">
+                    Tap the button below to report an outage in your area. If 3+ farmers in your zone report within 30 minutes, a high-priority ticket is automatically filed and SDO is alerted!
+                </p>
+            </div>
+        </div>
+        <form method="POST" action="{{ route('farmer.outage.report') }}" class="w-full sm:w-auto">
+            @csrf
+            <button type="submit" 
+                class="w-full sm:w-auto bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold px-4 py-2.5 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 shadow-lg shadow-rose-950/50 hover:scale-[1.02]">
+                <i class="fa-solid fa-bolt-lightning"></i> Report Outage
+            </button>
+        </form>
+    </div>
+
     {{-- Stat Cards --}}
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
         {{-- Active Connections --}}
@@ -256,6 +278,89 @@
             @endif
         </div>
     </div>
+
+    {{-- Smart Bill Prediction Section --}}
+    @if(isset($predictions) && count($predictions) > 0)
+        <div class="mt-8 mb-8">
+            <div class="flex items-center gap-2 mb-4">
+                <div class="w-2.5 h-5 bg-theme-accent rounded-sm"></div>
+                <h3 class="text-xl font-bold text-theme-heading">Smart Billing & Cycle Advisor</h3>
+            </div>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                @foreach($predictions as $pred)
+                    <div class="utilitarian-card p-6 border-t-2 {{ $pred['is_trending_high'] ? 'border-t-rose-500 hover:border-rose-500' : 'border-t-emerald-500 hover:border-emerald-500' }} transition-all duration-200">
+                        <div class="flex justify-between items-start mb-4">
+                            <div>
+                                <span class="text-[10px] text-theme-accent font-bold tracking-widest uppercase">Connection {{ $pred['connection_number'] }}</span>
+                                <h4 class="text-base font-bold text-theme-heading leading-tight">{{ $pred['field_name'] }}</h4>
+                            </div>
+                            
+                            @if($pred['is_trending_high'])
+                                <div class="px-2.5 py-1 rounded bg-rose-500/10 border border-rose-500/30 text-rose-400 text-[10px] font-bold flex items-center gap-1.5 animate-pulse">
+                                    <i class="fa-solid fa-triangle-exclamation"></i> High Consumption (+{{ number_format($pred['percent_increase'], 0) }}%)
+                                </div>
+                            @else
+                                <div class="px-2.5 py-1 rounded bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[10px] font-bold flex items-center gap-1.5">
+                                    <i class="fa-solid fa-circle-check"></i> Normal Trend
+                                </div>
+                            @endif
+                        </div>
+
+                        {{-- Projected Stats --}}
+                        <div class="grid grid-cols-3 gap-4 mb-5 bg-[#0A110D] border border-theme-border/40 p-4 rounded-lg">
+                            <div class="text-center border-r border-theme-border/30">
+                                <p class="text-[9px] text-theme-text font-bold tracking-wider uppercase mb-1">6-Mo Normal</p>
+                                <p class="text-sm font-bold text-theme-heading">{{ number_format($pred['avg_units'], 0) }} <span class="text-[9px] text-theme-text font-normal">kWh</span></p>
+                            </div>
+                            <div class="text-center border-r border-theme-border/30">
+                                <p class="text-[9px] text-theme-text font-bold tracking-wider uppercase mb-1">Projected</p>
+                                <p class="text-sm font-bold {{ $pred['is_trending_high'] ? 'text-rose-400' : 'text-emerald-400' }}">{{ number_format($pred['projected_units'], 0) }} <span class="text-[9px] text-theme-text font-normal">kWh</span></p>
+                            </div>
+                            <div class="text-center">
+                                <p class="text-[9px] text-theme-text font-bold tracking-wider uppercase mb-1">Est. Bill</p>
+                                <p class="text-sm font-bold text-theme-heading">₹{{ number_format($pred['projected_bill'], 2) }}</p>
+                            </div>
+                        </div>
+
+                        {{-- Visual Gauge Meter --}}
+                        <div class="mb-4">
+                            <div class="flex justify-between items-center text-[10px] text-theme-text font-medium mb-1">
+                                <span>Cycle Progress & Projected Limit</span>
+                                <span class="font-bold {{ $pred['is_trending_high'] ? 'text-rose-400' : 'text-emerald-400' }}">{{ number_format($pred['gauge_percentage'], 0) }}% of baseline</span>
+                            </div>
+                            <div class="w-full h-2.5 bg-[#1F2F24] rounded-full overflow-hidden flex animate-pulse-subtle">
+                                <div class="h-full rounded-full transition-all duration-500 {{ $pred['is_trending_high'] ? 'bg-gradient-to-r from-amber-500 to-rose-500' : 'bg-gradient-to-r from-emerald-500 to-teal-500' }}" style="width: {{ $pred['gauge_percentage'] }}%"></div>
+                            </div>
+                        </div>
+
+                        {{-- Dynamic Warning Alert & Practical Irrigation Advisor --}}
+                        @if($pred['is_trending_high'])
+                            <div class="bg-rose-500/5 border border-rose-500/20 p-3 rounded-lg flex gap-3 items-start text-xs text-rose-300">
+                                <i class="fa-solid fa-lightbulb text-rose-400 mt-0.5"></i>
+                                <div>
+                                    <strong class="font-bold">Over-consumption Warning:</strong> Current usage is trending <span class="font-bold underline">{{ number_format($pred['percent_increase'], 0) }}% above</span> your 6-month historical baseline. 
+                                    <p class="mt-1 text-[11px] text-rose-300/80">
+                                        💡 <span class="font-medium text-white">Irrigation Scheduling Tip:</span> Shift heavy pump operations (tubewell, high load motors) to off-peak slots or reduce running duration by 15% to pull back within your normal billing tier.
+                                    </p>
+                                </div>
+                            </div>
+                        @else
+                            <div class="bg-emerald-500/5 border border-emerald-500/20 p-3 rounded-lg flex gap-3 items-start text-xs text-emerald-300">
+                                <i class="fa-solid fa-face-smile text-emerald-400 mt-0.5"></i>
+                                <div>
+                                    <strong class="font-bold">Excellent Cycle Management!</strong> Your consumption is perfectly aligned with your normal irrigation usage pattern. 
+                                    <p class="mt-1 text-[11px] text-emerald-300/80">
+                                        💡 Keep up the smart scheduled irrigation to maintain this stable, low-tariff billing cycle!
+                                    </p>
+                                </div>
+                            </div>
+                        @endif
+                    </div>
+                @endforeach
+            </div>
+        </div>
+    @endif
 
     {{-- Connection Request Modal --}}
     <div id="connectionModal" class="hidden fixed inset-0 bg-[#0A110D]/80 backdrop-blur-sm z-50 flex items-center justify-center">
