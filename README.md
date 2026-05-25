@@ -1,8 +1,8 @@
 # ⚡ Distribution of Electric Power for Agriculture
 
-### Ministry of Power Portal — Rajasthan
+### Ministry of Power Portal — india
 
-A comprehensive web portal for managing agricultural electricity distribution across Rajasthan. The system digitises connection management, metering, billing, complaint resolution, and subsidy administration — connecting farmers, field linemen, SDO officers, and administrators on a single platform.
+A comprehensive web portal for managing agricultural electricity distribution across india. The system digitises connection management, metering, billing, complaint resolution, and subsidy administration — connecting farmers, field linemen, SDO officers, and administrators on a single platform.
 
 ---
 
@@ -196,7 +196,7 @@ All seeded accounts use the password: **`password`**
 
 ## 👤 Author
 
-**Ravi Ranjan**
+**Ravi Ranjan, Mansi  Singh and Ayush Jha**
 <!-- Update with your college name below -->
 *[Your College Name Here]*
 

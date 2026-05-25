@@ -211,14 +211,14 @@ $html = <<<'HTML'
 <body>
 
     <div class="footer">
-        Digital Portal for Agricultural Power Distribution · Rajasthan Ministry of Power · Page PageNo
+        Digital Portal for Agricultural Power Distribution · india Ministry of Power · Page PageNo
     </div>
 
     <!-- PAGE 1: TITLE PAGE -->
     <div class="title-page">
         <div class="logo-container">⚡</div>
         <h1 class="main-title">Distribution of Electric Power for Agriculture</h1>
-        <div class="subtitle">Ministry of Power Portal — Rajasthan</div>
+        <div class="subtitle">Ministry of Power Portal — india</div>
         
         <div class="metadata-box">
             <table>
@@ -246,7 +246,7 @@ $html = <<<'HTML'
         </div>
         
         <div class="author-info">
-            <p><strong>Developed By:</strong> Ravi Ranjan</p>
+            <p><strong>Developed By:</strong> Ravi Ranjan, Mansi  Singh and Ayush Jha</p>
             <p><strong>GitHub:</strong> github.com/Raviranjan010</p>
             <p><strong>Purpose:</strong> Academic Thesis & Project Defense</p>
         </div>
@@ -257,7 +257,7 @@ $html = <<<'HTML'
     <!-- PAGE 2: PROJECT OVERVIEW & ARCHITECTURE -->
     <h2 class="section-header">1. Project Overview & Architecture</h2>
     <p>
-        The <strong>Agricultural Electric Power Distribution Portal</strong> is a specialized e-governance platform designed for the Rajasthan Ministry of Power. Its primary goal is to digitize and manage the electrical supply infrastructure dedicated to the agricultural sector. The system coordinates interaction between four core user groups: <strong>Administrators</strong>, <strong>Sub-Divisional Officers (SDOs)</strong>, <strong>Field Linemen</strong>, and <strong>Farmers</strong>.
+        The <strong>Agricultural Electric Power Distribution Portal</strong> is a specialized e-governance platform designed for the india Ministry of Power. Its primary goal is to digitize and manage the electrical supply infrastructure dedicated to the agricultural sector. The system coordinates interaction between four core user groups: <strong>Administrators</strong>, <strong>Sub-Divisional Officers (SDOs)</strong>, <strong>Field Linemen</strong>, and <strong>Farmers</strong>.
     </p>
     
     <h3 class="subsection-header">Key Modules:</h3>

@@ -74,7 +74,7 @@ class UserSeeder extends Seeder
                 'farmer_id_number' => 'KV-2024-' . (8820 + $index),
                 'village' => $farmer['village'],
                 'district' => $farmer['district'],
-                'state' => 'Rajasthan',
+                'state' => 'india',
                 'aadhar_number' => '12345678901' . $index,
                 'is_active' => true,
             ]);

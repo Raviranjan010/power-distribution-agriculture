@@ -7,10 +7,10 @@ This document contains a slide-by-slide presentation script and live demonstrati
 ## 📊 Presentation Slide Script
 
 ### Slide 1: Title Slide (Introduction)
-*   **Slide Title:** Digitalizing Agricultural Power Distribution: A Modern Web Portal for Rajasthan Ministry of Power
-*   **Visuals:** Title, Your Name (Ravi Ranjan), College Name, Mentor's Name. Icons of Electricity/Agriculture.
+*   **Slide Title:** Digitalizing Agricultural Power Distribution: A Modern Web Portal for india Ministry of Power
+*   **Visuals:** Title, Your Name (Ravi Ranjan, Mansi  Singh and Ayush Jha), College Name, Mentor's Name. Icons of Electricity/Agriculture.
 *   **What to Say (Script):**
-    > "Good morning, respected examiners and faculty members. Today, I am excited to present my project titled *Digitalizing Agricultural Power Distribution*. This portal is designed for the Ministry of Power, Rajasthan, to streamline, manage, and digitize the lifecycle of agricultural electricity connections. Agriculture is the backbone of our economy, and electricity is crucial for irrigation. However, traditional systems suffer from manual billing delays, lack of transparency in government subsidies, and slow grievance redressal. Our project bridges this gap by connecting Farmers, Field Linemen, Sub-Divisional Officers, and Administrators on a single, secure digital platform."
+    > "Good morning, respected examiners and faculty members. Today, I am excited to present my project titled *Digitalizing Agricultural Power Distribution*. This portal is designed for the Ministry of Power, india, to streamline, manage, and digitize the lifecycle of agricultural electricity connections. Agriculture is the backbone of our economy, and electricity is crucial for irrigation. However, traditional systems suffer from manual billing delays, lack of transparency in government subsidies, and slow grievance redressal. Our project bridges this gap by connecting Farmers, Field Linemen, Sub-Divisional Officers, and Administrators on a single, secure digital platform."
 
 ---
 
@@ -132,7 +132,7 @@ During the viva/presentation, examiners will want to see the project running. Fo
 
 ## 💡 Quick Tips for a Stellar Presentation
 
-1.  **Keep it flow-oriented:** Examiners love stories. Frame your presentation around the journey of a farmer (e.g., *"This is Ram, a farmer in Rajasthan who wants a new tubewell connection..."*).
+1.  **Keep it flow-oriented:** Examiners love stories. Frame your presentation around the journey of a farmer (e.g., *"This is Ram, a farmer in india who wants a new tubewell connection..."*).
 2.  **Explain the Code Logic:** If asked about security, mention:
     *   **SQL Injection Prevention:** Eloquent ORM uses PDO parameter binding automatically.
     *   **CSRF Protection:** `@csrf` tokens in every post form prevent cross-site request forgery.

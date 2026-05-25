@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('zones', function (Blueprint $table) {
-            $table->string('state')->default('Rajasthan')->after('name');
+            $table->string('state')->default('india')->after('name');
         });
     }
 

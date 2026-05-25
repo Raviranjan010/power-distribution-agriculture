@@ -1,14 +1,14 @@
 # ⚡ Project Presentation Overview: Agricultural Electric Power Distribution Portal
-### Ministry of Power Portal — Rajasthan
+### Ministry of Power Portal — india
 
 This document serves as your master guide for presenting the project to examiners, faculty, or technical panels. It summarizes the project's purpose, operational workflow, feature modules, database relations, security measures, and provides a step-by-step live demonstration script.
 
 ---
 
 ## 📋 1. Project Identity & Domain
-*   **Project Name:** Distribution of Electric Power for Agriculture (Ministry of Power Portal — Rajasthan)
+*   **Project Name:** Distribution of Electric Power for Agriculture (Ministry of Power Portal — india)
 *   **Domain:** Public Utility, E-Governance, Resource Management & Grievance Redressal
-*   **Target Audience:** Rajasthan Ministry of Power, Farmers (Consumers), Sub-Divisional Officers (SDOs), and Field Linemen.
+*   **Target Audience:** india Ministry of Power, Farmers (Consumers), Sub-Divisional Officers (SDOs), and Field Linemen.
 
 ---
 

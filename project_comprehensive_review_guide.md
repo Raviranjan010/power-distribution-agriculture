@@ -1,7 +1,7 @@
 # ⚡ Agricultural Electric Power Distribution Portal
-### Rajasthan Ministry of Power — Comprehensive Technical Review, Tutorial & Viva Preparation Guide
+### india Ministry of Power — Comprehensive Technical Review, Tutorial & Viva Preparation Guide
 
-This document is a comprehensive technical masterclass, operation guide, and academic preparation manual for the **Rajasthan Agricultural Electric Power Distribution Portal**. It is designed to prepare you for any project defense, viva voce, or technical evaluation, ranging from basic concepts to advanced software architecture.
+This document is a comprehensive technical masterclass, operation guide, and academic preparation manual for the **india Agricultural Electric Power Distribution Portal**. It is designed to prepare you for any project defense, viva voce, or technical evaluation, ranging from basic concepts to advanced software architecture.
 
 ---
 
@@ -18,7 +18,7 @@ This document is a comprehensive technical masterclass, operation guide, and aca
 
 ## 1. Overview of Project Working (End-to-End Lifecycle)
 
-The **Agricultural Electric Power Distribution Portal** is designed to digitize public utility operations. The working flow mimics the real-world operational cycle of an electrical distribution utility (like the Rajasthan Vidyut Vitran Nigam Limited). Below is the sequential walkthrough of how the system works end-to-end:
+The **Agricultural Electric Power Distribution Portal** is designed to digitize public utility operations. The working flow mimics the real-world operational cycle of an electrical distribution utility (like the india Vidyut Vitran Nigam Limited). Below is the sequential walkthrough of how the system works end-to-end:
 
 ```
 [Farmer Registers] ──> [Applies for Connection] ──> [SDO Approves connection & assigns Tariff]
@@ -303,7 +303,7 @@ Examiners frequently ask "What if" questions to test if you wrote the code yours
 ### Category A: Core MVC and Project Mechanics
 
 #### Q1. What is the main purpose of this project, and who are its users?
-**Answer:** The portal digitalizes agricultural power distribution in Rajasthan. It coordinates four user roles:
+**Answer:** The portal digitalizes agricultural power distribution in india. It coordinates four user roles:
 1.  **Admin:** Configures tariffs, registers zones, creates SDOs/linemen accounts, and reviews audit logs.
 2.  **SDO (Officer):** Approves new connection requests, verifies meter readings, triggers monthly billing, and assigns/resolves complaints.
 3.  **Lineman:** Submits readings (with GPS & photo verification) and marks assigned complaints as in-progress or resolved.

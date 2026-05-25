@@ -1,5 +1,5 @@
 # ⚡ Presentation Slides: Agricultural Electric Power Distribution Portal
-### Rajasthan Ministry of Power E-Governance Initiative
+### india Ministry of Power E-Governance Initiative
 
 Use this document as your direct slide-by-slide script and structure for creating your PowerPoint presentation or presenting directly.
 
@@ -8,16 +8,16 @@ Use this document as your direct slide-by-slide script and structure for creatin
 ## Slide 1: Title Slide (Introduction)
 
 ### ⚡ DIGITALIZING AGRICULTURAL POWER DISTRIBUTION
-#### A Modern Web Portal for Rajasthan Ministry of Power
+#### A Modern Web Portal for india Ministry of Power
 
-*   **Presented By:** Ravi Ranjan
+*   **Presented By:** Ravi Ranjan, Mansi  Singh and Ayush Jha
 *   **College:** [Your College Name Here]
 *   **Domain:** E-Governance & Public Utility Operations
 
 ---
 *   **Visual Suggestion:** A clean dark background with modern icons of electricity (lightning bolt) and agricultural fields (crops/water pump).
 *   **Speaker Script:** 
-    > "Good morning, respected examiners and faculty members. Today, I am presenting my project, 'Digitalizing Agricultural Power Distribution'. This portal is designed for the Rajasthan Ministry of Power to modernize and streamline connection management, metering, billing, and grievance resolution for our agricultural sector. By bridging the gap between Farmers, Field Linemen, Sub-Divisional Officers, and Admins, the portal replaces manual paper-based processes with transparent, transaction-safe digital workflows."
+    > "Good morning, respected examiners and faculty members. Today, I am presenting my project, 'Digitalizing Agricultural Power Distribution'. This portal is designed for the india Ministry of Power to modernize and streamline connection management, metering, billing, and grievance resolution for our agricultural sector. By bridging the gap between Farmers, Field Linemen, Sub-Divisional Officers, and Admins, the portal replaces manual paper-based processes with transparent, transaction-safe digital workflows."
 
 ---
 

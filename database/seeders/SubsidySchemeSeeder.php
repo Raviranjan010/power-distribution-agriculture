@@ -23,9 +23,9 @@ class SubsidySchemeSeeder extends Seeder
                 'updated_at' => now(),
             ],
             [
-                'scheme_name' => 'Rajasthan State Free Power (Agriculture)',
+                'scheme_name' => 'india State Free Power (Agriculture)',
                 'description' => 'Free power for tubewells up to specified limits.',
-                'eligibility_criteria' => json_encode(['max_load_kw' => 10, 'state' => 'Rajasthan']),
+                'eligibility_criteria' => json_encode(['max_load_kw' => 10, 'state' => 'india']),
                 'discount_percentage' => 100.00,
                 'max_units_covered' => 1000,
                 'start_date' => '2024-04-01',
